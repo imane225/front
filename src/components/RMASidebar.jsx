@@ -7,21 +7,36 @@ import {
   Search,
   UserPlus,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Plus 
 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom'; 
 import './RMASidebar.css';
 
 const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
   const [isCollapsed, setIsCollapsed] = useState(externalIsCollapsed || false);
   const [activeItem, setActiveItem] = useState('search-sinistre');
   const [expandedMenus, setExpandedMenus] = useState(['sinistre']);
-
   
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     if (typeof externalIsCollapsed === 'boolean') {
       setIsCollapsed(externalIsCollapsed);
     }
   }, [externalIsCollapsed]);
+
+  useEffect(() => {
+    const pathname = location.pathname;
+    if (pathname.includes('/consultation/sinistres/creer')) {
+      setActiveItem('creer-sinistre');
+      setExpandedMenus(prev => prev.includes('sinistre') ? prev : [...prev, 'sinistre']);
+    } else if (pathname.includes('/consultation/sinistres')) {
+      setActiveItem('search-sinistre');
+      setExpandedMenus(prev => prev.includes('sinistre') ? prev : [...prev, 'sinistre']);
+    }
+  }, [location.pathname]);
 
   const menuItems = [
     {
@@ -40,7 +55,13 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
           id: 'search-sinistre',
           label: 'Rechercher sinistre',
           icon: Search,
-          href: '/sinistre/search'
+          href: '/consultation/sinistres'
+        },
+        {
+          id: 'creer-sinistre', 
+          label: 'Créer sinistre',
+          icon: Plus,
+          href: '/consultation/sinistres/creer'
         }
       ]
     },
@@ -61,9 +82,8 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
     }
   };
 
-  const handleItemClick = (itemId) => {
+  const handleItemClick = (itemId, href) => {
     if (menuItems.find(item => item.id === itemId && item.isExpandable)) {
-      
       setExpandedMenus(prev => 
         prev.includes(itemId) 
           ? prev.filter(id => id !== itemId)
@@ -71,6 +91,16 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
       );
     } else {
       setActiveItem(itemId);
+      if (href) {
+        navigate(href);
+      }
+    }
+  };
+
+  const handleSubItemClick = (subItemId, href) => {
+    setActiveItem(subItemId);
+    if (href) {
+      navigate(href);
     }
   };
 
@@ -102,7 +132,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
                   className={`rma-sidebar-link ${activeItem === item.id ? 'active' : ''}`}
                   onClick={(e) => {
                     e.preventDefault();
-                    handleItemClick(item.id);
+                    handleItemClick(item.id, item.href);
                   }}
                   title={isCollapsed ? item.label : ''}
                 >
@@ -131,7 +161,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
                             className={`rma-sidebar-sublink ${activeItem === subItem.id ? 'active' : ''}`}
                             onClick={(e) => {
                               e.preventDefault();
-                              setActiveItem(subItem.id);
+                              handleSubItemClick(subItem.id, subItem.href);
                             }}
                           >
                             <SubIconComponent size={16} />

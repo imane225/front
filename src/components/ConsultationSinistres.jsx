@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   RefreshCw, 
@@ -9,25 +10,19 @@ import {
   User,
   FileText,
   AlertCircle,
-  Calendar
+  Calendar,
+  ClipboardList  
 } from 'lucide-react';
 import SinistreService from '../services/sinistreService';
 import './ConsultationSinistres.css';
 
 const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   
-  // 🔧 AJOUT : Configuration du token au chargement
   useEffect(() => {
-    // ⚠️ REMPLACE par ton vrai token de Postman (sans le mot "Bearer")
-    const token = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJUUll0aUpNY2c1aUF1UV9YUG9tZ3ZnWVBBeTc0dDJoalBUa09pUDY2X053In0.eyJleHAiOjE3NDk4MzA2MTYsImlhdCI6MTc0OTgzMDMxNiwianRpIjoiY2M4NTI0NDktZmFjOS00NGM3LWIyZGItODY2NjJiY2ZkYjZkIiwiaXNzIjoiaHR0cHM6Ly9hY2Nlc3MtZHkucm1hYXNzdXJhbmNlLmNvbS9hdXRoL3JlYWxtcy9ybWEtYWQiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiNDI2NzdmOTctODdkNy00NTVlLWI1ODktMDEzOGZjZDQyZWFjIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibm92YXMiLCJzZXNzaW9uX3N0YXRlIjoiNWNmZjY3MDktZjQ0Zi00MTA0LTllNTgtZTIzNjhlMmNiYWQ3IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLXJtYS1hZCIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbInZpZXctdXNlcnMiLCJxdWVyeS1ncm91cHMiLCJxdWVyeS11c2VycyJdfSwiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiNWNmZjY3MDktZjQ0Zi00MTA0LTllNTgtZTIzNjhlMmNiYWQ3IiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiSW1hbmUgRUwgQUxKSSIsInByZWZlcnJlZF91c2VybmFtZSI6InMwMDAxNDk0IiwiZ2l2ZW5fbmFtZSI6IkltYW5lIiwiZmFtaWx5X25hbWUiOiJFTCBBTEpJIiwiZW1haWwiOiJpLmVsYWxqaUBybWFhc3N1cmFuY2UuY29tIn0.esAAd9Z_Ff-iOIL8Fo-SOsydrhBpoluBExhurlXwqUTvYtm28R9iaSTEc6Rnq01XxPMack9Tum7jCyZTA93d9cWG7wwueAtVMaHmAt5fNsPYK6TA2DNjXg2LQH5PkPphBRiNxBXuZU-b5Vdd9VDxe5oyy97guE2vlowVFx36LMbL-5I0cTev8EpFO125xO8T8TTLKC4AKfm0F8LMn1gysAH0rMXUVun882RDCTbYJeM6E4mKAHsrlE-zT-iz3_sIKL1Gl20SKQObXsb9005rou3amUxjkucPHX3VXgHb12luF1uryu_MvzyynLyLgfvXLR5cNI6VNdLHF3ZAHAV7CQ'; // TON TOKEN ICI
-    
+    const token = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJUUll0aUpNY2c1aUF1UV9YUG9tZ3ZnWVBBeTc0dDJoalBUa09pUDY2X053In0.eyJleHAiOjE3NTA4NDc4MDIsImlhdCI6MTc1MDg0NzUwMiwianRpIjoiZmE2Mjk0NDQtMmUyYi00NGU4LTk0YzItNWJlZTgyYjJlZGI5IiwiaXNzIjoiaHR0cHM6Ly9hY2Nlc3MtZHkucm1hYXNzdXJhbmNlLmNvbS9hdXRoL3JlYWxtcy9ybWEtYWQiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiNDI2NzdmOTctODdkNy00NTVlLWI1ODktMDEzOGZjZDQyZWFjIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibm92YXMiLCJzZXNzaW9uX3N0YXRlIjoiYWZmZTQ1MDYtMDkzYy00OThhLTk3YzQtMzU0MGU3OGJlNWM5IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLXJtYS1hZCIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbInZpZXctdXNlcnMiLCJxdWVyeS1ncm91cHMiLCJxdWVyeS11c2VycyJdfSwiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYWZmZTQ1MDYtMDkzYy00OThhLTk3YzQtMzU0MGU3OGJlNWM5IiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiSW1hbmUgRUwgQUxKSSIsInByZWZlcnJlZF91c2VybmFtZSI6InMwMDAxNDk0IiwiZ2l2ZW5fbmFtZSI6IkltYW5lIiwiZmFtaWx5X25hbWUiOiJFTCBBTEpJIiwiZW1haWwiOiJpLmVsYWxqaUBybWFhc3N1cmFuY2UuY29tIn0.lmzn6U4ECxgiweP6DHFT0nRJ5AMVVm0GA0vtSaH_kl8iQCjeoS50Xp6CADJJQT5OX94s-Mh6ax3A34xMKBE17ACG4_XDQCE8B4J3z6drliB1wyAVWbNf7Ff-K-zZ3V2na59mu9l9_DGFkapVy0qtUggJz3BWqmdR8w03Ro9_JUQnyEOYknlNmRdf-fFL4o6X_z3SAQ8t_MsjgDiRupwTZUW3oNgxwpB5uNXrYBax7vNNtIxtAsByR60SQGBxc9ARFB-zt7j-4TTzgjL9ACAb4HzWpNgB8GWgkbsHtDUzsOUV53MPjNO5kUGFfhjEEA9dsfe7XQVCU7NaYBOEl-etCA'; 
     SinistreService.setToken(token);
     console.log('🔑 Token défini pour les API calls');
-    
-    // 🔧 SUPPRIMÉ : Test de connexion automatique qui cause 431
-    // On va tester directement avec une vraie recherche
-      
-  }, []); // Se lance une seule fois au montage du composant
+  }, []); 
 
   const [activeTab, setActiveTab] = useState('recherche-sinistre');
   const [loading, setLoading] = useState(false);
@@ -47,190 +42,180 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     typeRecherche: 'EXACTE'
   });
 
- 
+  const navigate = useNavigate();
 
-  // ✅ Recherche par numéro de sinistre - UTILISE LE SERVICE
   const rechercherParNumero = async () => {
-  if (!searchParams.numSinistre.trim()) {
-    setError('Le numéro de sinistre est obligatoire');
-    return;
-  }
+    if (!searchParams.numSinistre.trim()) {
+      setError('Le numéro de sinistre est obligatoire');
+      return;
+    }
 
-  setLoading(true);
-  setError('');
-  setSuccessMessage('');
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
 
-  try {
-    // 🔧 MODIFIÉ : Passer le typeRecherche
-    const response = await SinistreService.rechercherParNumero(
-      searchParams.numSinistre, 
-      searchParams.typeRecherche
-    );
-    
-    const resultData = response.data || [];
-    
-    setResults(resultData);
-    setTotalResults(resultData.length);
-    setTotalPages(Math.ceil(resultData.length / 10));
-    setCurrentPage(1);
-    setSuccessMessage(response.message || 'Sinistre trouvé avec succès');
-  } catch (error) {
-    const errorMsg = SinistreService.handleAPIError(error);
-    setError(errorMsg);
-    setResults([]);
-    setTotalResults(0);
-  } finally {
-    setLoading(false);
-  }
-};
-  // ✅ Recherche par nom et prénom - UTILISE LE SERVICE
+    try {
+      const response = await SinistreService.rechercherParNumero(
+        searchParams.numSinistre, 
+        searchParams.typeRecherche
+      );
+      
+      const resultData = response.data || [];
+      
+      setResults(resultData);
+      setTotalResults(resultData.length);
+      setTotalPages(Math.ceil(resultData.length / 10));
+      setCurrentPage(1);
+      setSuccessMessage(response.message || 'Sinistre trouvé avec succès');
+    } catch (error) {
+      const errorMsg = SinistreService.handleAPIError(error);
+      setError(errorMsg);
+      setResults([]);
+      setTotalResults(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const rechercherParNomPrenom = async () => {
-  if (!searchParams.nom.trim() && !searchParams.prenom.trim()) {
-    setError('Au moins le nom ou le prénom doit être renseigné');
-    return;
-  }
+    if (!searchParams.nom.trim() && !searchParams.prenom.trim()) {
+      setError('Au moins le nom ou le prénom doit être renseigné');
+      return;
+    }
 
-  setLoading(true);
-  setError('');
-  setSuccessMessage('');
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
 
-  try {
-    // 🔧 MODIFIÉ : Passer le typeRecherche
-    const response = await SinistreService.rechercherParNomPrenom(
-      searchParams.nom, 
-      searchParams.prenom,
-      searchParams.typeRecherche
-    );
-    
-    const resultData = response.data || [];
-    setResults(resultData);
-    setTotalResults(resultData.length);
-    setTotalPages(Math.ceil(resultData.length / 10));
-    setCurrentPage(1);
-    setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
-  } catch (error) {
-    const errorMsg = SinistreService.handleAPIError(error);
-    setError(errorMsg);
-    setResults([]);
-    setTotalResults(0);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await SinistreService.rechercherParNomPrenom(
+        searchParams.nom, 
+        searchParams.prenom,
+        searchParams.typeRecherche
+      );
+      
+      const resultData = response.data || [];
+      setResults(resultData);
+      setTotalResults(resultData.length);
+      setTotalPages(Math.ceil(resultData.length / 10));
+      setCurrentPage(1);
+      setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+    } catch (error) {
+      const errorMsg = SinistreService.handleAPIError(error);
+      setError(errorMsg);
+      setResults([]);
+      setTotalResults(0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // ✅ Recherche par nature de maladie - UTILISE LE SERVICE
   const rechercherParNatureMaladie = async () => {
-  if (!searchParams.natureMaladie.trim()) {
-    setError('La nature de maladie est obligatoire');
-    return;
-  }
+    if (!searchParams.natureMaladie.trim()) {
+      setError('La nature de maladie est obligatoire');
+      return;
+    }
 
-  setLoading(true);
-  setError('');
-  setSuccessMessage('');
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
 
-  try {
-    // 🔧 MODIFIÉ : Passer le typeRecherche
-    const response = await SinistreService.rechercherParNatureMaladie(
-      searchParams.natureMaladie,
-      searchParams.typeRecherche,
-      50
-    );
-    
-    const resultData = response.data || [];
-    setResults(resultData);
-    setTotalResults(resultData.length);
-    setTotalPages(Math.ceil(resultData.length / 10));
-    setCurrentPage(1);
-    setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
-  } catch (error) {
-    const errorMsg = SinistreService.handleAPIError(error);
-    setError(errorMsg);
-    setResults([]);
-    setTotalResults(0);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await SinistreService.rechercherParNatureMaladie(
+        searchParams.natureMaladie,
+        searchParams.typeRecherche,
+        50
+      );
+      
+      const resultData = response.data || [];
+      setResults(resultData);
+      setTotalResults(resultData.length);
+      setTotalPages(Math.ceil(resultData.length / 10));
+      setCurrentPage(1);
+      setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+    } catch (error) {
+      const errorMsg = SinistreService.handleAPIError(error);
+      setError(errorMsg);
+      setResults([]);
+      setTotalResults(0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-
-  // ✅ Recherche par état du sinistre - UTILISE LE SERVICE
   const rechercherParEtat = async () => {
-  if (!searchParams.etatSinistre.trim()) {
-    setError('L\'état du sinistre est obligatoire');
-    return;
-  }
+    if (!searchParams.etatSinistre.trim()) {
+      setError('L\'état du sinistre est obligatoire');
+      return;
+    }
 
-  setLoading(true);
-  setError('');
-  setSuccessMessage('');
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
 
-  try {
-    // 🔧 MODIFIÉ : Passer le typeRecherche
-    const response = await SinistreService.rechercherParEtat(
-      searchParams.etatSinistre,
-      searchParams.typeRecherche
-    );
+    try {
+      const response = await SinistreService.rechercherParEtat(
+        searchParams.etatSinistre,
+        searchParams.typeRecherche
+      );
+      
+      const resultData = response.data || [];
+      setResults(resultData);
+      setTotalResults(resultData.length);
+      setTotalPages(Math.ceil(resultData.length / 10));
+      setCurrentPage(1);
+      setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+    } catch (error) {
+      const errorMsg = SinistreService.handleAPIError(error);
+      setError(errorMsg);
+      setResults([]);
+      setTotalResults(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const rechercherCombine = async () => {
+    const { numSinistre, nom, prenom, natureMaladie, etatSinistre } = searchParams;
     
-    const resultData = response.data || [];
-    setResults(resultData);
-    setTotalResults(resultData.length);
-    setTotalPages(Math.ceil(resultData.length / 10));
-    setCurrentPage(1);
-    setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
-  } catch (error) {
-    const errorMsg = SinistreService.handleAPIError(error);
-    setError(errorMsg);
-    setResults([]);
-    setTotalResults(0);
-  } finally {
-    setLoading(false);
-  }
-};
+    if (!numSinistre.trim() && !nom.trim() && !prenom.trim() && 
+        !natureMaladie.trim() && !etatSinistre.trim()) {
+      setError('Au moins un critère de recherche doit être renseigné');
+      return;
+    }
 
-  // ✅ Recherche combinée - UTILISE LE SERVICE
- const rechercherCombine = async () => {
-  const { numSinistre, nom, prenom, natureMaladie, etatSinistre } = searchParams;
-  
-  if (!numSinistre.trim() && !nom.trim() && !prenom.trim() && 
-      !natureMaladie.trim() && !etatSinistre.trim()) {
-    setError('Au moins un critère de recherche doit être renseigné');
-    return;
-  }
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
 
-  setLoading(true);
-  setError('');
-  setSuccessMessage('');
-
-  try {
-    // 🔧 MODIFIÉ : Structure des paramètres selon le backend
-    const response = await SinistreService.rechercherCombine(
-      {
-        numSinistre: numSinistre.trim() || null,
-        nom: nom.trim() || null, 
-        prenom: prenom.trim() || null,
-        natureMaladie: natureMaladie.trim() || null,
-        etatSinistre: etatSinistre.trim() || null
-      },
-      searchParams.typeRecherche,
-      50
-    );
-    
-    const resultData = response.data || [];
-    setResults(resultData);
-    setTotalResults(resultData.length);
-    setTotalPages(Math.ceil(resultData.length / 10));
-    setCurrentPage(1);
-    setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
-  } catch (error) {
-    const errorMsg = SinistreService.handleAPIError(error);
-    setError(errorMsg);
-    setResults([]);
-    setTotalResults(0);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await SinistreService.rechercherCombine(
+        {
+          numSinistre: numSinistre.trim() || null,
+          nom: nom.trim() || null, 
+          prenom: prenom.trim() || null,
+          natureMaladie: natureMaladie.trim() || null,
+          etatSinistre: etatSinistre.trim() || null
+        },
+        searchParams.typeRecherche,
+        50
+      );
+      
+      const resultData = response.data || [];
+      setResults(resultData);
+      setTotalResults(resultData.length);
+      setTotalPages(Math.ceil(resultData.length / 10));
+      setCurrentPage(1);
+      setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+    } catch (error) {
+      const errorMsg = SinistreService.handleAPIError(error);
+      setError(errorMsg);
+      setResults([]);
+      setTotalResults(0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = () => {
     setError('');
@@ -300,8 +285,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const handleViewDetails = (sinistre) => {
-    console.log('Voir détails du sinistre:', sinistre);
-    // Ici vous pouvez ajouter la logique pour afficher les détails
+    console.log('🔍 Navigation vers détails du sinistre:', sinistre.numSinistre);
+    navigate(`/consultation/sinistres/${sinistre.numSinistre}/details`, {
+      state: { sinistre }
+    });
   };
 
   const tabs = [
@@ -332,16 +319,279 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     }
   ];
 
-  // ✅ Pagination des résultats pour l'affichage
   const getCurrentPageResults = () => {
     const startIndex = (currentPage - 1) * 10;
     const endIndex = startIndex + 10;
     return results.slice(startIndex, endIndex);
   };
 
+  const renderSearchForm = () => {
+    switch (activeTab) {
+      case 'recherche-sinistre':
+        return (
+          <div className="form-grid form-grid-2">
+            <div className="form-group">
+              <label className="form-label required">
+                Numéro de Sinistre
+              </label>
+              <input
+                type="text"
+                value={searchParams.numSinistre}
+                onChange={(e) => setSearchParams({...searchParams, numSinistre: e.target.value})}
+                placeholder="Saisir le numéro complet (ex: SIN202400001)"
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                Type de correspondance
+              </label>
+              <div className="select-wrapper">
+                <select
+                  value={searchParams.typeRecherche}
+                  onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
+                  className="form-select"
+                >
+                  <option value="EXACTE">EXACTE</option>
+                  <option value="CONTIENT">CONTIENT</option>
+                  <option value="COMMENCE_PAR">COMMENCE PAR</option>
+                  <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
+                </select>
+                <ChevronDown className="select-icon" />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'etat-sinistre':
+        return (
+          <div className="form-grid form-grid-2">
+            <div className="form-group">
+              <label className="form-label required">
+                État du sinistre
+              </label>
+              <input
+                type="text"
+                value={searchParams.etatSinistre}
+                onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
+                placeholder="Ex: Ouvert, Clôturé, En cours..."
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                Type de correspondance
+              </label>
+              <div className="select-wrapper">
+                <select
+                  value={searchParams.typeRecherche}
+                  onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
+                  className="form-select"
+                >
+                  <option value="EXACTE">EXACTE</option>
+                  <option value="CONTIENT">CONTIENT</option>
+                  <option value="COMMENCE_PAR">COMMENCE PAR</option>
+                  <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
+                </select>
+                <ChevronDown className="select-icon" />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'assure-nom-prenom':
+        return (
+          <>
+            <div className="form-grid form-grid-2">
+              <div className="form-group">
+                <label className="form-label">
+                  Nom de l'assuré
+                </label>
+                <input
+                  type="text"
+                  value={searchParams.nom}
+                  onChange={(e) => setSearchParams({...searchParams, nom: e.target.value})}
+                  placeholder="Nom de famille"
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  Prénom de l'assuré
+                </label>
+                <input
+                  type="text"
+                  value={searchParams.prenom}
+                  onChange={(e) => setSearchParams({...searchParams, prenom: e.target.value})}
+                  placeholder="Prénom"
+                  className="form-input"
+                />
+              </div>
+            </div>
+            <div className="form-grid form-grid-2">
+              <div className="form-group">
+                <label className="form-label">
+                  Type de correspondance
+                </label>
+                <div className="select-wrapper">
+                  <select
+                    value={searchParams.typeRecherche}
+                    onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
+                    className="form-select"
+                  >
+                    <option value="EXACTE">EXACTE</option>
+                    <option value="CONTIENT">CONTIENT</option>
+                    <option value="COMMENCE_PAR">COMMENCE PAR</option>
+                    <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
+                  </select>
+                  <ChevronDown className="select-icon" />
+                </div>
+              </div>
+              <div className="form-group">
+              </div>
+            </div>
+            <div className="form-info">
+              <strong>*</strong> Au moins le nom ou le prénom doit être renseigné
+            </div>
+          </>
+        );
+
+      case 'nature-maladie':
+        return (
+          <div className="form-grid form-grid-2">
+            <div className="form-group">
+              <label className="form-label required">
+                Nature de maladie
+              </label>
+              <input
+                type="text"
+                value={searchParams.natureMaladie}
+                onChange={(e) => setSearchParams({...searchParams, natureMaladie: e.target.value})}
+                placeholder="Ex: Grippe, Soins dentaires, Consultation médicale..."
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                Type de correspondance
+              </label>
+              <div className="select-wrapper">
+                <select
+                  value={searchParams.typeRecherche}
+                  onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
+                  className="form-select"
+                >
+                  <option value="EXACTE">EXACTE</option>
+                  <option value="CONTIENT">CONTIENT</option>
+                  <option value="COMMENCE_PAR">COMMENCE PAR</option>
+                  <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
+                </select>
+                <ChevronDown className="select-icon" />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'recherche-combinee':
+        return (
+          <>
+            <div className="form-grid form-grid-2">
+              <div className="form-group">
+                <label className="form-label">
+                  Numéro de Sinistre
+                </label>
+                <input
+                  type="text"
+                  value={searchParams.numSinistre}
+                  onChange={(e) => setSearchParams({...searchParams, numSinistre: e.target.value})}
+                  placeholder="Numéro de sinistre"
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  Nom de l'assuré
+                </label>
+                <input
+                  type="text"
+                  value={searchParams.nom}
+                  onChange={(e) => setSearchParams({...searchParams, nom: e.target.value})}
+                  placeholder="Nom de famille"
+                  className="form-input"
+                />
+              </div>
+            </div>
+            <div className="form-grid form-grid-2">
+              <div className="form-group">
+                <label className="form-label">
+                  Prénom de l'assuré
+                </label>
+                <input
+                  type="text"
+                  value={searchParams.prenom}
+                  onChange={(e) => setSearchParams({...searchParams, prenom: e.target.value})}
+                  placeholder="Prénom"
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  Nature de maladie
+                </label>
+                <input
+                  type="text"
+                  value={searchParams.natureMaladie}
+                  onChange={(e) => setSearchParams({...searchParams, natureMaladie: e.target.value})}
+                  placeholder="Type de maladie"
+                  className="form-input"
+                />
+              </div>
+            </div>
+            <div className="form-grid form-grid-2">
+              <div className="form-group">
+                <label className="form-label">
+                  État du sinistre
+                </label>
+                <input
+                  type="text"
+                  value={searchParams.etatSinistre}
+                  onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
+                  placeholder="État"
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  Type de recherche
+                </label>
+                <div className="select-wrapper">
+                  <select
+                    value={searchParams.typeRecherche}
+                    onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
+                    className="form-select"
+                  >
+                    <option value="EXACTE">EXACTE</option>
+                    <option value="CONTIENT">CONTIENT</option>
+                    <option value="COMMENCE_PAR">COMMENCE PAR</option>
+                    <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
+                  </select>
+                  <ChevronDown className="select-icon" />
+                </div>
+              </div>
+            </div>
+            <div className="form-info">
+              <strong>Info :</strong> Au moins un critère de recherche doit être renseigné pour effectuer une recherche combinée.
+            </div>
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={`consultation-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-
       <div className="page-header">
         <h1 className="page-title">Consultation des Sinistres</h1>
         <nav className="breadcrumb">
@@ -393,252 +643,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
         </h3>
 
         <div className="form-content">
-          {activeTab === 'recherche-sinistre' && (
-            <div className="form-grid form-grid-3">
-              <div className="form-group span-2">
-                <label className="form-label required">
-                  Numéro de Sinistre
-                </label>
-                <input
-                  type="text"
-                  value={searchParams.numSinistre}
-                  onChange={(e) => setSearchParams({...searchParams, numSinistre: e.target.value})}
-                  placeholder="Saisir le numéro complet (ex: SIN202400001)"
-                  className="form-input"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">
-                  Type de correspondance
-                </label>
-                <div className="select-wrapper">
-                  <select
-                    value={searchParams.typeRecherche}
-                    onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
-                    className="form-select"
-                  >
-                    <option value="EXACTE">EXACTE</option>
-                    <option value="CONTIENT">CONTIENT</option>
-                    <option value="COMMENCE_PAR">COMMENCE PAR</option>
-                    <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
-                  </select>
-                  <ChevronDown className="select-icon" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'etat-sinistre' && (
-            <div className="form-grid form-grid-2">
-              <div className="form-group">
-                <label className="form-label required">
-                  État du sinistre
-                </label>
-                <input
-                  type="text"
-                  value={searchParams.etatSinistre}
-                  onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
-                  placeholder="Ex: Ouvert, Clôturé, En cours..."
-                  className="form-input"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">
-                  Type de correspondance
-                </label>
-                <div className="select-wrapper">
-                  <select
-                    value={searchParams.typeRecherche}
-                    onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
-                    className="form-select"
-                  >
-                    <option value="EXACTE">EXACTE</option>
-                    <option value="CONTIENT">CONTIENT</option>
-                    <option value="COMMENCE_PAR">COMMENCE PAR</option>
-                    <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
-                  </select>
-                  <ChevronDown className="select-icon" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'assure-nom-prenom' && (
-            <>
-              <div className="form-grid form-grid-3">
-                <div className="form-group">
-                  <label className="form-label">
-                    Nom de l'assuré
-                  </label>
-                  <input
-                    type="text"
-                    value={searchParams.nom}
-                    onChange={(e) => setSearchParams({...searchParams, nom: e.target.value})}
-                    placeholder="Nom de famille"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    Prénom de l'assuré
-                  </label>
-                  <input
-                    type="text"
-                    value={searchParams.prenom}
-                    onChange={(e) => setSearchParams({...searchParams, prenom: e.target.value})}
-                    placeholder="Prénom"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    Type de correspondance
-                  </label>
-                  <div className="select-wrapper">
-                    <select
-                      value={searchParams.typeRecherche}
-                      onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
-                      className="form-select"
-                    >
-                      <option value="EXACTE">EXACTE</option>
-                      <option value="CONTIENT">CONTIENT</option>
-                      <option value="COMMENCE_PAR">COMMENCE PAR</option>
-                      <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
-                    </select>
-                    <ChevronDown className="select-icon" />
-                  </div>
-                </div>
-              </div>
-              <div className="form-info">
-                <strong>*</strong> Au moins le nom ou le prénom doit être renseigné
-              </div>
-            </>
-          )}
-
-          {activeTab === 'nature-maladie' && (
-            <div className="form-grid form-grid-2">
-              <div className="form-group">
-                <label className="form-label required">
-                  Nature de maladie
-                </label>
-                <input
-                  type="text"
-                  value={searchParams.natureMaladie}
-                  onChange={(e) => setSearchParams({...searchParams, natureMaladie: e.target.value})}
-                  placeholder="Ex: Grippe, Soins dentaires, Consultation médicale..."
-                  className="form-input"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">
-                  Type de correspondance
-                </label>
-                <div className="select-wrapper">
-                  <select
-                    value={searchParams.typeRecherche}
-                    onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
-                    className="form-select"
-                  >
-                    <option value="EXACTE">EXACTE</option>
-                    <option value="CONTIENT">CONTIENT</option>
-                    <option value="COMMENCE_PAR">COMMENCE PAR</option>
-                    <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
-                  </select>
-                  <ChevronDown className="select-icon" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'recherche-combinee' && (
-            <>
-              <div className="form-grid form-grid-3">
-                <div className="form-group">
-                  <label className="form-label">
-                    Numéro de Sinistre
-                  </label>
-                  <input
-                    type="text"
-                    value={searchParams.numSinistre}
-                    onChange={(e) => setSearchParams({...searchParams, numSinistre: e.target.value})}
-                    placeholder="Numéro de sinistre"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    Nom de l'assuré
-                  </label>
-                  <input
-                    type="text"
-                    value={searchParams.nom}
-                    onChange={(e) => setSearchParams({...searchParams, nom: e.target.value})}
-                    placeholder="Nom de famille"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    Prénom de l'assuré
-                  </label>
-                  <input
-                    type="text"
-                    value={searchParams.prenom}
-                    onChange={(e) => setSearchParams({...searchParams, prenom: e.target.value})}
-                    placeholder="Prénom"
-                    className="form-input"
-                  />
-                </div>
-              </div>
-              <div className="form-grid form-grid-3">
-                <div className="form-group">
-                  <label className="form-label">
-                    Nature de maladie
-                  </label>
-                  <input
-                    type="text"
-                    value={searchParams.natureMaladie}
-                    onChange={(e) => setSearchParams({...searchParams, natureMaladie: e.target.value})}
-                    placeholder="Type de maladie"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    État du sinistre
-                  </label>
-                  <input
-                    type="text"
-                    value={searchParams.etatSinistre}
-                    onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
-                    placeholder="État"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    Type de recherche
-                  </label>
-                  <div className="select-wrapper">
-                    <select
-                      value={searchParams.typeRecherche}
-                      onChange={(e) => setSearchParams({...searchParams, typeRecherche: e.target.value})}
-                      className="form-select"
-                    >
-                      <option value="EXACTE">EXACTE</option>
-                      <option value="CONTIENT">CONTIENT</option>
-                      <option value="COMMENCE_PAR">COMMENCE PAR</option>
-                      <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
-                    </select>
-                    <ChevronDown className="select-icon" />
-                  </div>
-                </div>
-              </div>
-              <div className="form-info">
-                <strong>Info :</strong> Au moins un critère de recherche doit être renseigné pour effectuer une recherche combinée.
-              </div>
-            </>
-          )}
+          {renderSearchForm()}
         </div>
 
         <div className="form-actions">
