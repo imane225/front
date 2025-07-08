@@ -409,7 +409,6 @@ class SinistreService {
     throw new Error('Impossible de récupérer les détails du sinistre');
   }
 
-  // 🆕 NOUVELLE MÉTHODE : Génération de document PDF
   async genererDocumentSinistre(numPolice, numFiliale, numAffiliation, numSinistre) {
     if (!numPolice || !numPolice.trim()) {
       throw new Error('Le numéro de police est obligatoire');
@@ -491,7 +490,6 @@ class SinistreService {
     }
   }
 
-  // 🆕 MÉTHODE UTILITAIRE : Téléchargement automatique du blob
   downloadBlob(blob, filename) {
     try {
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -539,7 +537,6 @@ class SinistreService {
       return message; 
     }
     
-    // Erreurs spécifiques à la génération de documents
     if (message.includes('Aucune édition disponible pour l\'état du sinistre')) {
       return 'Aucun document disponible pour cet état de sinistre. États supportés: REGLE, REJETE, EN_ATTENTE_FACTURE_DEFINITIVE, EN_ATTENTE_COMPLEMENT_INFORMATION, EN_ATTENTE_CONTRE_VISITE';
     }

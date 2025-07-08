@@ -46,7 +46,6 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
   });
   const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
 
-  // Configuration des boutons de documents selon l'état
   const DOCUMENT_BUTTONS = {
     "3": { label: "Lettre de rejet", icon: FileX, color: "bg-red-500", type: "REJET" },
     "4": { label: "Décompte", icon: FileCheck, color: "bg-green-500", type: "DECOMPTE" },
@@ -106,7 +105,6 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
       console.log('🔄 Génération du document pour le sinistre:', numSinistre);
       console.log('📄 Type de document:', buttonConfig.type);
 
-      // Utilisation de la nouvelle méthode du service
       const result = await SinistreService.genererDocumentSinistre(
         sinistreDetails.numPolice,
         sinistreDetails.numFiliale,
@@ -114,7 +112,6 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
         numSinistre
       );
 
-      // Téléchargement automatique
       SinistreService.downloadBlob(result.blob, result.filename);
 
       console.log('✅ Document téléchargé avec succès');
@@ -176,7 +173,6 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
     const etatCode = sinistreDetails.etatSinistre;
     const buttonConfig = DOCUMENT_BUTTONS[etatCode];
 
-    // Si aucune configuration de bouton trouvée, ne rien afficher
     if (!buttonConfig) {
       return null;
     }
@@ -349,7 +345,6 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
         </div>
 
         <div className="header-actions">
-          {/* Bouton de génération de document */}
           {getDocumentButton()}
           
           <button onClick={handleModifier} className="btn btn-primary">
@@ -364,7 +359,6 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
         </div>
       </div>
 
-      {/* Message d'erreur pour la génération de document */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <div className="flex items-center">
