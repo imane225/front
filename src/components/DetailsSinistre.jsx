@@ -19,7 +19,11 @@ import {
   Users,
   Hash,
   Info,
-  Edit
+  Edit,
+  FileCheck,
+  FileX,
+  FileQuestion,
+  Loader
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SinistreService from '../services/sinistreService';
@@ -40,6 +44,16 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
     technique: false,
     dates: false
   });
+  const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
+
+  // Configuration des boutons de documents selon l'état
+  const DOCUMENT_BUTTONS = {
+    "3": { label: "Lettre de rejet", icon: FileX, color: "bg-red-500", type: "REJET" },
+    "4": { label: "Décompte", icon: FileCheck, color: "bg-green-500", type: "DECOMPTE" },
+    "6": { label: "Lettre complément", icon: FileQuestion, color: "bg-orange-500", type: "COMPLEMENT" },
+    "8": { label: "Convocation CV", icon: Stethoscope, color: "bg-purple-500", type: "CONTRE_VISITE" },
+    "11": { label: "Lettre d'accord", icon: CheckCircle, color: "bg-blue-500", type: "ACCORD" }
+  };
 
   useEffect(() => {
     const loadSinistreDetails = async () => {
@@ -54,7 +68,7 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
         setSinistreDetails(response.data);
         
       } catch (error) {
-        console.error(' Erreur lors du chargement des détails:', error);
+        console.error('❌ Erreur lors du chargement des détails:', error);
         setError(SinistreService.handleAPIError(error));
       } finally {
         setLoading(false);
@@ -72,6 +86,45 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
 
   const handleModifier = () => {
     navigate(`/consultation/sinistres/${numSinistre}/modifier`);
+  };
+
+  const handleGenerateDocument = async () => {
+    if (!sinistreDetails) return;
+
+    const etatCode = sinistreDetails.etatSinistre;
+    const buttonConfig = DOCUMENT_BUTTONS[etatCode];
+
+    if (!buttonConfig) {
+      setError('Aucun document disponible pour cet état de sinistre');
+      return;
+    }
+
+    try {
+      setIsGeneratingDocument(true);
+      setError('');
+
+      console.log('🔄 Génération du document pour le sinistre:', numSinistre);
+      console.log('📄 Type de document:', buttonConfig.type);
+
+      // Utilisation de la nouvelle méthode du service
+      const result = await SinistreService.genererDocumentSinistre(
+        sinistreDetails.numPolice,
+        sinistreDetails.numFiliale,
+        sinistreDetails.numAffiliation,
+        numSinistre
+      );
+
+      // Téléchargement automatique
+      SinistreService.downloadBlob(result.blob, result.filename);
+
+      console.log('✅ Document téléchargé avec succès');
+
+    } catch (error) {
+      console.error('❌ Erreur génération document:', error);
+      setError(`Erreur lors de la génération du document: ${error.message}`);
+    } finally {
+      setIsGeneratingDocument(false);
+    }
   };
 
   const toggleSection = (sectionName) => {
@@ -115,6 +168,38 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
       default:
         return <FileText className="status-icon" />;
     }
+  };
+
+  const getDocumentButton = () => {
+    if (!sinistreDetails) return null;
+
+    const etatCode = sinistreDetails.etatSinistre;
+    const buttonConfig = DOCUMENT_BUTTONS[etatCode];
+
+    // Si aucune configuration de bouton trouvée, ne rien afficher
+    if (!buttonConfig) {
+      return null;
+    }
+
+    const IconComponent = buttonConfig.icon;
+
+    return (
+      <button
+        onClick={handleGenerateDocument}
+        disabled={isGeneratingDocument}
+        className={`document-btn ${buttonConfig.color}`}
+      >
+        {isGeneratingDocument ? (
+          <Loader className="w-4 h-4 loading-icon" />
+        ) : (
+          <IconComponent className="w-4 h-4" />
+        )}
+        <span>
+          {isGeneratingDocument ? 'Génération...' : buttonConfig.label}
+        </span>
+        <Download className="w-4 h-4" />
+      </button>
+    );
   };
 
   const InfoItem = ({ label, value, important = false }) => (
@@ -264,6 +349,9 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
         </div>
 
         <div className="header-actions">
+          {/* Bouton de génération de document */}
+          {getDocumentButton()}
+          
           <button onClick={handleModifier} className="btn btn-primary">
             <Edit className="btn-icon" />
             Modifier
@@ -275,6 +363,19 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
           </button>
         </div>
       </div>
+
+      {/* Message d'erreur pour la génération de document */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+            <div>
+              <h4 className="text-red-800 font-semibold">Erreur</h4>
+              <p className="text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="details-grid">
         

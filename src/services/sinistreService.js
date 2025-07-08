@@ -409,6 +409,106 @@ class SinistreService {
     throw new Error('Impossible de récupérer les détails du sinistre');
   }
 
+  // 🆕 NOUVELLE MÉTHODE : Génération de document PDF
+  async genererDocumentSinistre(numPolice, numFiliale, numAffiliation, numSinistre) {
+    if (!numPolice || !numPolice.trim()) {
+      throw new Error('Le numéro de police est obligatoire');
+    }
+    if (!numFiliale || !numFiliale.trim()) {
+      throw new Error('Le numéro de filiale est obligatoire');
+    }
+    if (!numAffiliation || !numAffiliation.trim()) {
+      throw new Error('Le numéro d\'affiliation est obligatoire');
+    }
+    if (!numSinistre || !numSinistre.trim()) {
+      throw new Error('Le numéro de sinistre est obligatoire');
+    }
+
+    console.log('📄 Génération de document PDF pour:', {
+      numPolice: numPolice.trim(),
+      numFiliale: numFiliale.trim(),
+      numAffiliation: numAffiliation.trim(),
+      numSinistre: numSinistre.trim()
+    });
+
+    try {
+      const url = `${API_BASE_URL}/${numPolice.trim()}/${numFiliale.trim()}/${numAffiliation.trim()}/${numSinistre.trim()}/document`;
+      console.log('🌐 URL de génération:', url);
+
+      const headers = {
+        'Accept': 'application/pdf'
+      };
+
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+        console.log('🔑 Token ajouté pour la génération PDF');
+      } else {
+        console.warn('⚠️ Aucun token disponible pour la génération PDF');
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        credentials: 'include'
+      });
+
+      console.log('📥 Réponse génération PDF status:', response.status);
+
+      if (!response.ok) {
+        let errorMessage = `Erreur ${response.status}`;
+        
+        try {
+          const errorData = await response.json();
+          console.log('❌ Données d\'erreur PDF:', errorData);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+      console.log('📦 Taille du blob PDF:', blob.size, 'bytes');
+      
+      if (blob.size === 0) {
+        throw new Error('Le document généré est vide');
+      }
+
+      return {
+        blob,
+        filename: `document_sinistre_${numSinistre.trim()}.pdf`,
+        success: true,
+        message: 'Document généré avec succès'
+      };
+
+    } catch (error) {
+      console.error('❌ Erreur génération PDF:', error);
+      throw error;
+    }
+  }
+
+  // 🆕 MÉTHODE UTILITAIRE : Téléchargement automatique du blob
+  downloadBlob(blob, filename) {
+    try {
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      console.log('✅ Téléchargement du fichier:', filename);
+    } catch (error) {
+      console.error('❌ Erreur téléchargement:', error);
+      throw new Error('Erreur lors du téléchargement du fichier');
+    }
+  }
+
   handleAPIError(error) {
     const message = error.message || '';
     
@@ -439,6 +539,17 @@ class SinistreService {
       return message; 
     }
     
+    // Erreurs spécifiques à la génération de documents
+    if (message.includes('Aucune édition disponible pour l\'état du sinistre')) {
+      return 'Aucun document disponible pour cet état de sinistre. États supportés: REGLE, REJETE, EN_ATTENTE_FACTURE_DEFINITIVE, EN_ATTENTE_COMPLEMENT_INFORMATION, EN_ATTENTE_CONTRE_VISITE';
+    }
+    if (message.includes('Impossible de générer le document')) {
+      return message;
+    }
+    if (message.includes('Sinistre non trouvé')) {
+      return 'Sinistre non trouvé. Vérifiez les paramètres (police, filiale, affiliation, numéro sinistre)';
+    }
+    
     if (message.includes('Au moins un critère de recherche doit être renseigné')) {
       return 'Au moins un critère de recherche doit être renseigné';
     }
@@ -453,9 +564,6 @@ class SinistreService {
     }
     if (message.includes('Assuré non trouvé')) {
       return 'Assuré non trouvé avec ce numéro d\'affiliation';
-    }
-    if (message.includes('Sinistre non trouvé')) {
-      return 'Sinistre non trouvé avec ce numéro';
     }
     if (message.includes('Erreur technique')) {
       return message; 
