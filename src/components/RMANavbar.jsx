@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, User, Bell } from 'lucide-react';
+import { ChevronDown, User, Bell, FolderOpen } from 'lucide-react'; // Ajout de FolderOpen
+import { Link } from 'react-router-dom';
 import './RMANavbar.css';
 
 const RMANavbar = ({ isSidebarCollapsed = false }) => {
@@ -17,7 +18,6 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
     <nav className={`rma-navbar ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className="rma-navbar-container">
         <div className="rma-navbar-content">
-          
           <div className="rma-navbar-logo">
             <a href="/dashboard">
               <img 
@@ -25,7 +25,6 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
                 alt="RMA Logo"
                 onError={handleImageError}
               />
-             
               <div className="rma-navbar-logo-fallback">
                 <div className="rma-navbar-logo-circle">
                   <span>RMA</span>
@@ -38,14 +37,14 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
             </a>
           </div>
 
-         
           <div className="rma-navbar-actions">
-            
+           
+            {/* Cloche notification */}
             <button className="rma-navbar-button">
               <Bell size={20} />
             </button>
-            
-            
+
+            {/* Menu utilisateur */}
             <div className="rma-navbar-user-menu">
               <button 
                 className="rma-navbar-user-button"
@@ -54,8 +53,7 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
                 <User size={20} />
                 <ChevronDown size={16} />
               </button>
-              
-              
+
               {userMenuOpen && (
                 <div className="rma-navbar-dropdown">
                   <a href="#">Mon Profil</a>
@@ -69,8 +67,7 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
           </div>
         </div>
       </div>
-      
-      
+
       {userMenuOpen && (
         <div 
           className="rma-navbar-overlay" 

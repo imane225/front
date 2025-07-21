@@ -1,0 +1,20 @@
+// 📁 src/services/axiosLot.js
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'http://localhost:9999/rest/api/lots', // ✅ ici l'URL de ton backend pour les lots
+});
+
+api.interceptors.request.use(
+  (config) => {
+    const token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJUUll0aUpNY2c1aUF1UV9YUG9tZ3ZnWVBBeTc0dDJoalBUa09pUDY2X053In0.eyJleHAiOjE3NTE5OTA1NzMsImlhdCI6MTc1MTk5MDI3MywianRpIjoiNjk2OTUxMzEtMWI1Yy00ODc2LTk2MDMtYTZkNTk1YTA0ZjllIiwiaXNzIjoiaHR0cHM6Ly9hY2Nlc3MtZHkucm1hYXNzdXJhbmNlLmNvbS9hdXRoL3JlYWxtcy9ybWEtYWQiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiY2M3ZWViN2QtMmU1NC00YWI1LWExNTUtM2U3NTAxNmY3ZGQwIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibm92YXMiLCJzZXNzaW9uX3N0YXRlIjoiYWU3YmNlOGItZTQ2My00NGNkLWI1NDYtZDU4MWZlOGM2MzE0IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLXJtYS1hZCIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbInZpZXctdXNlcnMiLCJxdWVyeS1ncm91cHMiLCJxdWVyeS11c2VycyJdfSwiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYWU3YmNlOGItZTQ2My00NGNkLWI1NDYtZDU4MWZlOGM2MzE0IiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiWmluZWIgSEFSUkFHVUkiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzMDAwMTQ5NSIsImdpdmVuX25hbWUiOiJaaW5lYiIsImZhbWlseV9uYW1lIjoiSEFSUkFHVUkiLCJlbWFpbCI6InouaGFycmFndWlAcm1hYXNzdXJhbmNlLmNvbSJ9.mWx7z_XIzOnr1kukpHFEHekH_2umsIRsEJlGUcSxjv1pMd_tryNi1SKFtLzexLx2if3A30DN8v7pXHqxyr6OAsEaq-iJ0zJkLEQWwwieVZzEAdc1Ts6MT-5sW--9L-lcbzfABnNh1z9jua5Kw8bz0uzHwAeJofrq1uBWaPvjhymt1cmv87CUOxcKavFiEVpv5tFGw2fyt1S1hIJB5-Y-IImkG4BOjuq5uudAuzzAVgiVgu6zRsUNRg7YI3BG-S4EuNad_tzD-MQ-lPiBhiCvKru4nsLBQtCNmBxew5FsynV5G7iTQ7xBS_We0wz-VeUM3OiAoGDOnxT_5s2AuljdVg"; // remplace par ton token temporaire
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    config.headers['Content-Type'] = 'application/json';
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export default api;

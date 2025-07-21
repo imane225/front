@@ -1,0 +1,76 @@
+.accueil-container {
+  padding: 2rem;
+  background: linear-gradient(to bottom, #f8fafc, #eef2f7);
+  min-height: 100vh;
+}
+.icon-wrapper {
+  margin-bottom: 1rem;
+}
+
+.accueil-footer {
+  margin-top: 3rem;
+  padding: 1rem 0;
+  text-align: center;
+  background-color: #f1f5f9;
+  color: #475569;
+  font-size: 0.9rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.accueil-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.accueil-header h1 {
+  color: #1a3660;
+  font-size: 2rem;
+}
+
+.accueil-header p {
+  color: #475569;
+  font-size: 1.1rem;
+}
+
+.accueil-services {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.service-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 280px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+}
+
+.service-card h3 {
+  color: #1e3a8a;
+}
+
+.service-card p {
+  color: #334155;
+}
+
+.btn-discover {
+  margin-top: 1rem;
+  background-color: #234585;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.btn-discover:hover {
+  background-color: #1a3660;
+}

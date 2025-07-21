@@ -5,9 +5,9 @@ import {
   Users, 
   FileText, 
   Search,
-  UserPlus,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Layers // Pour l'icône des lots
 } from 'lucide-react';
 import './RMASidebar.css';
 
@@ -16,7 +16,6 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
   const [activeItem, setActiveItem] = useState('search-sinistre');
   const [expandedMenus, setExpandedMenus] = useState(['sinistre']);
 
-  
   useEffect(() => {
     if (typeof externalIsCollapsed === 'boolean') {
       setIsCollapsed(externalIsCollapsed);
@@ -28,7 +27,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
       id: 'home',
       label: 'Accueil',
       icon: Home,
-      href: '/dashboard'
+      href: '/sante'
     },
     {
       id: 'sinistre',
@@ -40,10 +39,32 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
           id: 'search-sinistre',
           label: 'Rechercher sinistre',
           icon: Search,
-          href: '/sinistre/search'
+          href: '/sinistres'
         }
       ]
     },
+    {
+      id: 'lot',
+      label: 'Lots',
+      icon: Layers,
+      isExpandable: true,
+      subItems:
+     [
+        {
+          id: 'search-lot',
+          label: 'Rechercher lot',
+          icon: Search,
+          href: '/lots'
+        },
+        {
+          id: 'create-lot',
+          label: 'Créer lot',
+          icon: FileText, 
+          href: '/lots/creation'
+        }
+      ]
+    },
+
     {
       id: 'documents',
       label: 'Documents',
@@ -55,15 +76,11 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
   const toggleSidebar = () => {
     const newCollapsed = !isCollapsed;
     setIsCollapsed(newCollapsed);
-    
-    if (onToggle) {
-      onToggle(newCollapsed);
-    }
+    if (onToggle) onToggle(newCollapsed);
   };
 
   const handleItemClick = (itemId) => {
     if (menuItems.find(item => item.id === itemId && item.isExpandable)) {
-      
       setExpandedMenus(prev => 
         prev.includes(itemId) 
           ? prev.filter(id => id !== itemId)
@@ -78,17 +95,12 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
 
   return (
     <div className={`rma-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      
       <div className="rma-sidebar-header">
-        <button 
-          className="rma-sidebar-toggle"
-          onClick={toggleSidebar}
-        >
+        <button className="rma-sidebar-toggle" onClick={toggleSidebar}>
           <Menu size={20} />
         </button>
       </div>
 
-     
       <nav className="rma-sidebar-nav">
         <ul className="rma-sidebar-menu">
           {menuItems.map((item) => {
@@ -118,8 +130,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
                     </>
                   )}
                 </a>
-                
-                
+
                 {item.subItems && isExpanded && !isCollapsed && (
                   <ul className="rma-sidebar-submenu">
                     {item.subItems.map((subItem) => {
@@ -132,6 +143,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
                             onClick={(e) => {
                               e.preventDefault();
                               setActiveItem(subItem.id);
+                              window.location.href = subItem.href;
                             }}
                           >
                             <SubIconComponent size={16} />
