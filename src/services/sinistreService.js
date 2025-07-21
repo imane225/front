@@ -37,13 +37,15 @@ class SinistreService {
         throw new Error('Authentification échouée');
       }
     } catch (error) {
-      console.error(' Erreur d\'authentification:', error);
+      console.error('❌ Erreur d\'authentification:', error);
       throw error;
     }
   }
+
   async apiCall(url, options = {}) {
     try {
-      console.log(' Appel API:', url);
+      console.log('🌐 Appel API:', url);
+      console.log('📤 Options:', options);
       
       const headers = {
         'Content-Type': 'application/json',
@@ -52,9 +54,9 @@ class SinistreService {
 
       if (this.token) {
         headers['Authorization'] = `Bearer ${this.token}`;
-        console.log(' Token ajouté aux headers');
+        console.log('🔑 Token ajouté aux headers');
       } else {
-        console.warn(' Aucun token disponible');
+        console.warn('⚠️ Aucun token disponible');
       }
       
       const response = await fetch(url, {
@@ -63,13 +65,14 @@ class SinistreService {
         ...options
       });
 
-      console.log('Réponse API status:', response.status);
+      console.log('📥 Réponse API status:', response.status);
 
       if (!response.ok) {
         let errorMessage = `Erreur ${response.status}`;
         
         try {
           const errorData = await response.json();
+          console.log('❌ Données d\'erreur:', errorData);
           if (errorData.message) {
             errorMessage = errorData.message;
           } else if (errorData.error) {
@@ -82,24 +85,75 @@ class SinistreService {
       }
 
       const apiResponse = await response.json();
-      console.log(' ApiResponse reçue:', apiResponse);
+      console.log('✅ ApiResponse reçue:', apiResponse);
+      
       if (apiResponse.success === false) {
         throw new Error(apiResponse.message || 'Erreur inconnue');
       }
+
       return {
-        data: Array.isArray(apiResponse.data) ? apiResponse.data : [apiResponse.data],
+        data: apiResponse.data, 
         message: apiResponse.message || 'Opération réussie',
-        success: apiResponse.success !== false
+        success: apiResponse.success !== false,
+        rawResponse: apiResponse
       };
     } catch (error) {
-      console.error(' Erreur API:', error);
+      console.error('❌ Erreur API:', error);
       throw error;
+    }
+  }
+
+  formatDateForBackend(dateStr) {
+    if (!dateStr) return '';
+    
+    try {
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      
+      if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateStr;
+      }
+      
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+      
+      return dateStr;
+    } catch (error) {
+      console.warn('⚠️ Erreur formatage date:', error);
+      return dateStr;
+    }
+  }
+
+  formatDateForFrontend(dateStr) {
+    if (!dateStr) return '';
+    
+    try {
+      if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        const [day, month, year] = dateStr.split('/');
+        return `${year}-${month}-${day}`;
+      }
+      
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateStr;
+      }
+      
+      return dateStr;
+    } catch (error) {
+      console.warn('⚠️ Erreur formatage date:', error);
+      return dateStr;
     }
   }
 
   async testConnection() {
     try {
-      console.log('Test de connexion...');
+      console.log('🔧 Test de connexion...');
       
       const response = await fetch(`${API_BASE_URL}/nom-prenom?nom=TEST`, {
         method: 'GET',
@@ -118,7 +172,7 @@ class SinistreService {
         hasToken: !!this.token 
       };
     } catch (error) {
-      console.error('Erreur de connexion:', error);
+      console.error('❌ Erreur de connexion:', error);
       return { success: false, error: error.message, hasToken: !!this.token };
     }
   }
@@ -232,10 +286,16 @@ class SinistreService {
       throw new Error('La date de survenance est obligatoire');
     }
 
+    const dataToSend = {
+      ...sinistreData,
+      dateSurv: this.formatDateForBackend(sinistreData.dateSurv),
+      dateDecl: sinistreData.dateDecl ? this.formatDateForBackend(sinistreData.dateDecl) : null
+    };
+
     const url = `${API_BASE_URL}/creer-sans-lot`;
     const response = await this.apiCall(url, {
       method: 'POST',
-      body: JSON.stringify(sinistreData)
+      body: JSON.stringify(dataToSend)
     });
     
     return {
@@ -255,20 +315,237 @@ class SinistreService {
       throw new Error('La date de survenance est obligatoire');
     }
 
-    const url = `${API_BASE_URL}/modifier/${numeroSinistre}`;
+    console.log('💾 Modification du sinistre - données reçues:', sinistreData);
+
+    const dataToSend = {
+      codeDecl: sinistreData.codeDecl.trim(),
+      dateSurv: this.formatDateForBackend(sinistreData.dateSurv),
+      dateDecl: sinistreData.dateDecl ? this.formatDateForBackend(sinistreData.dateDecl) : null,
+      montoFe: sinistreData.montoFe && sinistreData.montoFe.trim() ? sinistreData.montoFe.trim() : null,
+      refExtSi: sinistreData.refExtSi && sinistreData.refExtSi.trim() ? sinistreData.refExtSi.trim() : null,
+      natuMala: sinistreData.natuMala && sinistreData.natuMala.trim() ? sinistreData.natuMala.trim() : null
+    };
+
+    console.log('💾 Données formatées pour le backend:', dataToSend);
+
+    const url = `${API_BASE_URL}/modifier/${numeroSinistre.trim()}`;
     const response = await this.apiCall(url, {
       method: 'PUT',
-      body: JSON.stringify(sinistreData)
+      body: JSON.stringify(dataToSend)
     });
     
     return {
       ...response,
-      data: Array.isArray(response.data) ? response.data : [response.data]
+      data: response.data 
     };
+  }
+
+  async getDetailsSinistre(numSinistre) {
+    if (!numSinistre || !numSinistre.trim()) {
+      throw new Error('Le numéro de sinistre est obligatoire');
+    }
+
+    console.log('🔍 Récupération des détails pour:', numSinistre);
+    
+    try {
+      const urlDetails = `${API_BASE_URL}/${numSinistre.trim()}/details`;
+      console.log('🎯 Tentative avec endpoint /details:', urlDetails);
+      
+      const response = await this.apiCall(urlDetails);
+      console.log('✅ Réponse de /details:', response);
+      
+      let sinistreData = null;
+      
+      if (response.data) {
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          sinistreData = response.data[0];
+        } else if (!Array.isArray(response.data)) {
+          sinistreData = response.data;
+        }
+      }
+      
+      if (sinistreData) {
+        const formattedData = {
+          ...sinistreData,
+          dateSurv: this.formatDateForFrontend(sinistreData.dateSurv),
+          dateDecl: this.formatDateForFrontend(sinistreData.dateDecl),
+          dateOuve: this.formatDateForFrontend(sinistreData.dateOuve)
+        };
+        
+        console.log('✅ Données du sinistre trouvées et formatées:', formattedData);
+        return {
+          ...response,
+          data: formattedData
+        };
+      }
+    } catch (error) {
+      console.log('❌ Erreur avec /details:', error.message);
+    }
+    
+    try {
+      console.log('🔄 Fallback vers recherche par numéro');
+      const fallbackResponse = await this.rechercherParNumero(numSinistre, 'EXACTE');
+      
+      if (fallbackResponse.data && fallbackResponse.data.length > 0) {
+        const sinistreData = fallbackResponse.data[0];
+        
+        const formattedData = {
+          ...sinistreData,
+          dateSurv: this.formatDateForFrontend(sinistreData.dateSurv),
+          dateDecl: this.formatDateForFrontend(sinistreData.dateDecl),
+          dateOuve: this.formatDateForFrontend(sinistreData.dateOuve)
+        };
+        
+        console.log('✅ Données trouvées via fallback et formatées:', formattedData);
+        return {
+          ...fallbackResponse,
+          data: formattedData
+        };
+      }
+    } catch (fallbackError) {
+      console.log('❌ Erreur avec fallback:', fallbackError.message);
+    }
+    
+    throw new Error('Impossible de récupérer les détails du sinistre');
+  }
+
+  async genererDocumentSinistre(numPolice, numFiliale, numAffiliation, numSinistre) {
+    if (!numPolice || !numPolice.trim()) {
+      throw new Error('Le numéro de police est obligatoire');
+    }
+    if (!numFiliale || !numFiliale.trim()) {
+      throw new Error('Le numéro de filiale est obligatoire');
+    }
+    if (!numAffiliation || !numAffiliation.trim()) {
+      throw new Error('Le numéro d\'affiliation est obligatoire');
+    }
+    if (!numSinistre || !numSinistre.trim()) {
+      throw new Error('Le numéro de sinistre est obligatoire');
+    }
+
+    console.log('📄 Génération de document PDF pour:', {
+      numPolice: numPolice.trim(),
+      numFiliale: numFiliale.trim(),
+      numAffiliation: numAffiliation.trim(),
+      numSinistre: numSinistre.trim()
+    });
+
+    try {
+      const url = `${API_BASE_URL}/${numPolice.trim()}/${numFiliale.trim()}/${numAffiliation.trim()}/${numSinistre.trim()}/document`;
+      console.log('🌐 URL de génération:', url);
+
+      const headers = {
+        'Accept': 'application/pdf'
+      };
+
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+        console.log('🔑 Token ajouté pour la génération PDF');
+      } else {
+        console.warn('⚠️ Aucun token disponible pour la génération PDF');
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        credentials: 'include'
+      });
+
+      console.log('📥 Réponse génération PDF status:', response.status);
+
+      if (!response.ok) {
+        let errorMessage = `Erreur ${response.status}`;
+        
+        try {
+          const errorData = await response.json();
+          console.log('❌ Données d\'erreur PDF:', errorData);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+      console.log('📦 Taille du blob PDF:', blob.size, 'bytes');
+      
+      if (blob.size === 0) {
+        throw new Error('Le document généré est vide');
+      }
+
+      return {
+        blob,
+        filename: `document_sinistre_${numSinistre.trim()}.pdf`,
+        success: true,
+        message: 'Document généré avec succès'
+      };
+
+    } catch (error) {
+      console.error('❌ Erreur génération PDF:', error);
+      throw error;
+    }
+  }
+
+  downloadBlob(blob, filename) {
+    try {
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      console.log('✅ Téléchargement du fichier:', filename);
+    } catch (error) {
+      console.error('❌ Erreur téléchargement:', error);
+      throw new Error('Erreur lors du téléchargement du fichier');
+    }
   }
 
   handleAPIError(error) {
     const message = error.message || '';
+    
+    console.log('🚨 Gestion de l\'erreur:', message);
+    
+    if (message.includes('ne peut pas être modifié car il est dans l\'état')) {
+      return message; 
+    }
+    if (message.includes('Seule la réouverture est possible')) {
+      return message; 
+    }
+    if (message.includes('consultation uniquement autorisée')) {
+      return message; 
+    }
+    if (message.includes('Le type de déclaration ne peut pas être modifié pour un sinistre')) {
+      return message;
+    }
+    if (message.includes('La date de survenance ne peut pas être modifiée pour un sinistre')) {
+      return message;
+    }
+    if (message.includes('Le montant des frais engagés ne peut pas être modifié pour un sinistre')) {
+      return message; 
+    }
+    if (message.includes('La référence externe ne peut pas être modifiée pour un sinistre')) {
+      return message; 
+    }
+    if (message.includes('La nature de la maladie ne peut pas être modifiée pour un sinistre')) {
+      return message; 
+    }
+    
+    if (message.includes('Aucune édition disponible pour l\'état du sinistre')) {
+      return 'Aucun document disponible pour cet état de sinistre. États supportés: REGLE, REJETE, EN_ATTENTE_FACTURE_DEFINITIVE, EN_ATTENTE_COMPLEMENT_INFORMATION, EN_ATTENTE_CONTRE_VISITE';
+    }
+    if (message.includes('Impossible de générer le document')) {
+      return message;
+    }
+    if (message.includes('Sinistre non trouvé')) {
+      return 'Sinistre non trouvé. Vérifiez les paramètres (police, filiale, affiliation, numéro sinistre)';
+    }
     
     if (message.includes('Au moins un critère de recherche doit être renseigné')) {
       return 'Au moins un critère de recherche doit être renseigné';
@@ -285,16 +562,13 @@ class SinistreService {
     if (message.includes('Assuré non trouvé')) {
       return 'Assuré non trouvé avec ce numéro d\'affiliation';
     }
-    if (message.includes('Sinistre non trouvé')) {
-      return 'Sinistre non trouvé avec ce numéro';
-    }
     if (message.includes('Erreur technique')) {
       return message; 
     }
     if (message.includes('Erreur lors de')) {
       return message; 
     }
-        if (message.includes('Non autorisé') || message.includes('401')) {
+    if (message.includes('Non autorisé') || message.includes('401')) {
       return 'Session expirée - Veuillez vous reconnecter';
     }
     if (message.includes('Accès interdit') || message.includes('403')) {
