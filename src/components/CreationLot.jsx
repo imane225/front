@@ -15,8 +15,6 @@ const CreationLot = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
 
- 
-
   //  Récupération automatique infos police
   useEffect(() => {
     const fetchInfos = async () => {
@@ -38,7 +36,10 @@ const CreationLot = () => {
             raisonSocialeClient: infos.raisonSocialeClient
           }));
         } catch (err) {
+          console.error('Erreur lors de la récupération des infos police:', err);
           setInfosPolice(null);
+          // Optionnel: vous pourriez aussi afficher un message d'erreur à l'utilisateur
+          // setError('Impossible de récupérer les informations de la police');
         }
       }
     };
@@ -64,15 +65,16 @@ const CreationLot = () => {
       };
 
       const res = await lotService.createLotInterne(payload);
-      setSuccessMessage(` Lot créé avec succès : ${res.data.numeroLot}`);
+      setSuccessMessage(`Lot créé avec succès : ${res.data.numeroLot}`);
     } catch (err) {
       setError(lotService.handleAPIError(err));
     }
   };
+
   return (
     <div className="consultation-container">
       <div className="page-header">
-        <h1 className="page-title">Création d’un Lot Sinistre</h1>
+        <h1 className="page-title">Création d'un Lot Sinistre</h1>
       </div>
 
       <div className="form-container">

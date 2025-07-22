@@ -7,11 +7,8 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
-
   Layers, // Pour l'icône des lots
-
   Plus
-
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom'; 
 import './RMASidebar.css';
@@ -21,10 +18,8 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
   const [activeItem, setActiveItem] = useState('search-sinistre');
   const [expandedMenus, setExpandedMenus] = useState(['sinistre']);
 
-  
   const navigate = useNavigate();
   const location = useLocation();
-
 
   useEffect(() => {
     if (typeof externalIsCollapsed === 'boolean') {
@@ -40,6 +35,12 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
     } else if (pathname.includes('/consultation/sinistres')) {
       setActiveItem('search-sinistre');
       setExpandedMenus(prev => prev.includes('sinistre') ? prev : [...prev, 'sinistre']);
+    } else if (pathname.includes('/lots/creation')) {
+      setActiveItem('create-lot');
+      setExpandedMenus(prev => prev.includes('lot') ? prev : [...prev, 'lot']);
+    } else if (pathname.includes('/lots')) {
+      setActiveItem('search-lot');
+      setExpandedMenus(prev => prev.includes('lot') ? prev : [...prev, 'lot']);
     }
   }, [location.pathname]);
 
@@ -60,9 +61,6 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
           id: 'search-sinistre',
           label: 'Rechercher sinistre',
           icon: Search,
-
-          href: '/sinistres',
-
           href: '/consultation/sinistres'
         },
         {
@@ -70,7 +68,6 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
           label: 'Créer sinistre',
           icon: Plus,
           href: '/consultation/sinistres/creer'
-
         }
       ]
     },
@@ -79,8 +76,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
       label: 'Lots',
       icon: Layers,
       isExpandable: true,
-      subItems:
-     [
+      subItems: [
         {
           id: 'search-lot',
           label: 'Rechercher lot',
@@ -95,7 +91,6 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
         }
       ]
     },
-
     {
       id: 'documents',
       label: 'Documents',
@@ -183,12 +178,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
                             className={`rma-sidebar-sublink ${activeItem === subItem.id ? 'active' : ''}`}
                             onClick={(e) => {
                               e.preventDefault();
-
-                              setActiveItem(subItem.id);
-                              window.location.href = subItem.href;
-
                               handleSubItemClick(subItem.id, subItem.href);
-
                             }}
                           >
                             <SubIconComponent size={16} />

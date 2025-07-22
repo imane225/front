@@ -13,15 +13,33 @@ import {
   Calendar,
   ClipboardList  
 } from 'lucide-react';
+import { getAuthToken, getUserInfoFromToken } from '../config/auth';
 import SinistreService from '../services/sinistreService';
 import './ConsultationSinistres.css';
 
 const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   
+  // État utilisateur pour affichage des informations
+  const [userInfo, setUserInfo] = useState(null);
+  
   useEffect(() => {
-    const token = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJUUll0aUpNY2c1aUF1UV9YUG9tZ3ZnWVBBeTc0dDJoalBUa09pUDY2X053In0.eyJleHAiOjE3NTI4NTA3NDgsImlhdCI6MTc1Mjg1MDQ0OCwianRpIjoiOGIxZmQyMTctMGNmOC00ODlmLWJhNDQtZmYxMDViOWEyODQ1IiwiaXNzIjoiaHR0cHM6Ly9hY2Nlc3MtZHkucm1hYXNzdXJhbmNlLmNvbS9hdXRoL3JlYWxtcy9ybWEtYWQiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiNDI2NzdmOTctODdkNy00NTVlLWI1ODktMDEzOGZjZDQyZWFjIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibm92YXMiLCJzZXNzaW9uX3N0YXRlIjoiOTBkMjkzMGYtMWRlNy00YzBmLTlkOGItMjY2MjY4ZmQyNzAxIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLXJtYS1hZCIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbInZpZXctdXNlcnMiLCJxdWVyeS1ncm91cHMiLCJxdWVyeS11c2VycyJdfSwiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiOTBkMjkzMGYtMWRlNy00YzBmLTlkOGItMjY2MjY4ZmQyNzAxIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiSW1hbmUgRUwgQUxKSSIsInByZWZlcnJlZF91c2VybmFtZSI6InMwMDAxNDk0IiwiZ2l2ZW5fbmFtZSI6IkltYW5lIiwiZmFtaWx5X25hbWUiOiJFTCBBTEpJIiwiZW1haWwiOiJpLmVsYWxqaUBybWFhc3N1cmFuY2UuY29tIn0.hcZgRbFRVpedynQqlii1ZJUrcEokdmAk3TYohss_m00J6xsdnSLZP7V8rtjXU6nRmdK7RhsgbtWPWPh3eGn2HEH2GWgdTd91MPtY2eCQpn7A0vA5EgX7qR2N2KUXUZFCQdReA1nvdNMObApsUYbVy7fMLAdecFJOyIcYPWuSHtPx5OiD9cW_tczxybxd5IIhTCJwEQqU4zUvMloEUdQ2BiVL60rno88y2gJzX7ewVvsk4RxhNgXtNkCWTbgS2fFAYxGdyzASRb3o5I82NOKJtQsXFBLOYcMHipiw02sdE2B8MzH5pd-J9GUGBtZxO3QwndH4rznm83_dntMzim_nGg'; 
-    SinistreService.setToken(token);
-    console.log('🔑 Token défini pour les API calls');
+    // ✅ Plus besoin de hardcoder le token ici, il est centralisé
+    const currentToken = getAuthToken();
+    if (currentToken) {
+      // Utilisation de la configuration centralisée
+      SinistreService.setToken(currentToken);
+      
+      // Extraction des informations utilisateur depuis le token
+      const userData = getUserInfoFromToken(currentToken);
+      if (userData) {
+        setUserInfo(userData);
+        console.log('👤 Utilisateur connecté:', userData.name || userData.username);
+      }
+      
+      console.log('🔑 Token centralisé chargé pour les sinistres');
+    } else {
+      console.warn('⚠️ Aucun token disponible pour l\'authentification');
+    }
   }, []); 
 
   const [activeTab, setActiveTab] = useState('recherche-sinistre');
@@ -44,9 +62,43 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
 
   const navigate = useNavigate();
 
+  // ✅ Fonction utilitaire pour gérer les erreurs de manière centralisée
+  const handleApiError = (error, operation = 'opération') => {
+    console.error(`❌ Erreur lors de ${operation}:`, error);
+    
+    // Si erreur 401, le token a peut-être expiré
+    if (error.response?.status === 401) {
+      setError('Session expirée. Veuillez vous reconnecter.');
+      // Ici vous pourriez déclencher une redirection vers la page de login
+      return;
+    }
+    
+    const errorMsg = SinistreService.handleAPIError(error);
+    setError(errorMsg);
+  };
+
+  // ✅ Fonction pour valider les entrées utilisateur
+  const validateSearchInput = (input, fieldName) => {
+    if (!input || typeof input !== 'string') return false;
+    
+    const trimmedInput = input.trim();
+    if (trimmedInput.length === 0) return false;
+    
+    // Validation basique pour éviter les caractères dangereux
+    const dangerousChars = /[<>'";&\\]/;
+    if (dangerousChars.test(trimmedInput)) {
+      setError(`Caractères non autorisés dans ${fieldName}`);
+      return false;
+    }
+    
+    return true;
+  };
+
   const rechercherParNumero = async () => {
-    if (!searchParams.numSinistre.trim()) {
-      setError('Le numéro de sinistre est obligatoire');
+    if (!validateSearchInput(searchParams.numSinistre, 'le numéro de sinistre')) {
+      if (!searchParams.numSinistre.trim()) {
+        setError('Le numéro de sinistre est obligatoire');
+      }
       return;
     }
 
@@ -55,8 +107,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setSuccessMessage('');
 
     try {
+      console.log('🔍 Recherche par numéro:', searchParams.numSinistre);
+      
       const response = await SinistreService.rechercherParNumero(
-        searchParams.numSinistre, 
+        searchParams.numSinistre.trim(), 
         searchParams.typeRecherche
       );
       
@@ -66,10 +120,15 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       setTotalResults(resultData.length);
       setTotalPages(Math.ceil(resultData.length / 10));
       setCurrentPage(1);
-      setSuccessMessage(response.message || 'Sinistre trouvé avec succès');
+      
+      const message = resultData.length === 1 
+        ? 'Sinistre trouvé avec succès' 
+        : `${resultData.length} sinistre(s) trouvé(s)`;
+      setSuccessMessage(response.message || message);
+      
+      console.log('✅ Recherche terminée:', resultData.length, 'résultat(s)');
     } catch (error) {
-      const errorMsg = SinistreService.handleAPIError(error);
-      setError(errorMsg);
+      handleApiError(error, 'la recherche par numéro');
       setResults([]);
       setTotalResults(0);
     } finally {
@@ -78,7 +137,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherParNomPrenom = async () => {
-    if (!searchParams.nom.trim() && !searchParams.prenom.trim()) {
+    const nomValid = validateSearchInput(searchParams.nom, 'le nom');
+    const prenomValid = validateSearchInput(searchParams.prenom, 'le prénom');
+    
+    if (!nomValid && !prenomValid) {
       setError('Au moins le nom ou le prénom doit être renseigné');
       return;
     }
@@ -88,9 +150,14 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setSuccessMessage('');
 
     try {
+      console.log('🔍 Recherche par nom/prénom:', {
+        nom: searchParams.nom.trim(),
+        prenom: searchParams.prenom.trim()
+      });
+      
       const response = await SinistreService.rechercherParNomPrenom(
-        searchParams.nom, 
-        searchParams.prenom,
+        searchParams.nom.trim(), 
+        searchParams.prenom.trim(),
         searchParams.typeRecherche
       );
       
@@ -100,9 +167,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       setTotalPages(Math.ceil(resultData.length / 10));
       setCurrentPage(1);
       setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+      
+      console.log('✅ Recherche terminée:', resultData.length, 'résultat(s)');
     } catch (error) {
-      const errorMsg = SinistreService.handleAPIError(error);
-      setError(errorMsg);
+      handleApiError(error, 'la recherche par nom/prénom');
       setResults([]);
       setTotalResults(0);
     } finally {
@@ -111,8 +179,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherParNatureMaladie = async () => {
-    if (!searchParams.natureMaladie.trim()) {
-      setError('La nature de maladie est obligatoire');
+    if (!validateSearchInput(searchParams.natureMaladie, 'la nature de maladie')) {
+      if (!searchParams.natureMaladie.trim()) {
+        setError('La nature de maladie est obligatoire');
+      }
       return;
     }
 
@@ -121,10 +191,12 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setSuccessMessage('');
 
     try {
+      console.log('🔍 Recherche par nature de maladie:', searchParams.natureMaladie);
+      
       const response = await SinistreService.rechercherParNatureMaladie(
-        searchParams.natureMaladie,
+        searchParams.natureMaladie.trim(),
         searchParams.typeRecherche,
-        50
+        50 // Limite de résultats
       );
       
       const resultData = response.data || [];
@@ -133,9 +205,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       setTotalPages(Math.ceil(resultData.length / 10));
       setCurrentPage(1);
       setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+      
+      console.log('✅ Recherche terminée:', resultData.length, 'résultat(s)');
     } catch (error) {
-      const errorMsg = SinistreService.handleAPIError(error);
-      setError(errorMsg);
+      handleApiError(error, 'la recherche par nature de maladie');
       setResults([]);
       setTotalResults(0);
     } finally {
@@ -144,8 +217,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherParEtat = async () => {
-    if (!searchParams.etatSinistre.trim()) {
-      setError('L\'état du sinistre est obligatoire');
+    if (!validateSearchInput(searchParams.etatSinistre, 'l\'état du sinistre')) {
+      if (!searchParams.etatSinistre.trim()) {
+        setError('L\'état du sinistre est obligatoire');
+      }
       return;
     }
 
@@ -154,8 +229,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setSuccessMessage('');
 
     try {
+      console.log('🔍 Recherche par état:', searchParams.etatSinistre);
+      
       const response = await SinistreService.rechercherParEtat(
-        searchParams.etatSinistre,
+        searchParams.etatSinistre.trim(),
         searchParams.typeRecherche
       );
       
@@ -165,9 +242,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       setTotalPages(Math.ceil(resultData.length / 10));
       setCurrentPage(1);
       setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+      
+      console.log('✅ Recherche terminée:', resultData.length, 'résultat(s)');
     } catch (error) {
-      const errorMsg = SinistreService.handleAPIError(error);
-      setError(errorMsg);
+      handleApiError(error, 'la recherche par état');
       setResults([]);
       setTotalResults(0);
     } finally {
@@ -178,10 +256,33 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   const rechercherCombine = async () => {
     const { numSinistre, nom, prenom, natureMaladie, etatSinistre } = searchParams;
     
-    if (!numSinistre.trim() && !nom.trim() && !prenom.trim() && 
-        !natureMaladie.trim() && !etatSinistre.trim()) {
+    // Validation : au moins un critère doit être valide
+    const hasValidCriteria = [
+      numSinistre.trim(),
+      nom.trim(),
+      prenom.trim(),
+      natureMaladie.trim(),
+      etatSinistre.trim()
+    ].some(criteria => criteria.length > 0);
+    
+    if (!hasValidCriteria) {
       setError('Au moins un critère de recherche doit être renseigné');
       return;
+    }
+
+    // Validation des caractères pour chaque champ renseigné
+    const fieldsToValidate = [
+      { value: numSinistre, name: 'le numéro de sinistre' },
+      { value: nom, name: 'le nom' },
+      { value: prenom, name: 'le prénom' },
+      { value: natureMaladie, name: 'la nature de maladie' },
+      { value: etatSinistre, name: 'l\'état du sinistre' }
+    ];
+
+    for (const field of fieldsToValidate) {
+      if (field.value.trim() && !validateSearchInput(field.value, field.name)) {
+        return; // L'erreur est déjà définie dans validateSearchInput
+      }
     }
 
     setLoading(true);
@@ -189,16 +290,20 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setSuccessMessage('');
 
     try {
+      const searchCriteria = {
+        numSinistre: numSinistre.trim() || null,
+        nom: nom.trim() || null, 
+        prenom: prenom.trim() || null,
+        natureMaladie: natureMaladie.trim() || null,
+        etatSinistre: etatSinistre.trim() || null
+      };
+      
+      console.log('🔍 Recherche combinée:', searchCriteria);
+      
       const response = await SinistreService.rechercherCombine(
-        {
-          numSinistre: numSinistre.trim() || null,
-          nom: nom.trim() || null, 
-          prenom: prenom.trim() || null,
-          natureMaladie: natureMaladie.trim() || null,
-          etatSinistre: etatSinistre.trim() || null
-        },
+        searchCriteria,
         searchParams.typeRecherche,
-        50
+        50 // Limite de résultats
       );
       
       const resultData = response.data || [];
@@ -207,9 +312,10 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       setTotalPages(Math.ceil(resultData.length / 10));
       setCurrentPage(1);
       setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
+      
+      console.log('✅ Recherche terminée:', resultData.length, 'résultat(s)');
     } catch (error) {
-      const errorMsg = SinistreService.handleAPIError(error);
-      setError(errorMsg);
+      handleApiError(error, 'la recherche combinée');
       setResults([]);
       setTotalResults(0);
     } finally {
@@ -220,6 +326,15 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   const handleSearch = () => {
     setError('');
     setSuccessMessage('');
+    
+    // Vérifier que l'utilisateur est toujours authentifié
+    const currentToken = getAuthToken();
+    if (!currentToken) {
+      setError('Session expirée. Veuillez vous reconnecter.');
+      return;
+    }
+    
+    console.log(`🔍 Démarrage de la recherche - Onglet: ${activeTab}`);
     
     switch (activeTab) {
       case 'recherche-sinistre':
@@ -238,11 +353,14 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
         rechercherCombine();
         break;
       default:
+        setError('Type de recherche non reconnu');
         break;
     }
   };
 
   const handleReset = () => {
+    console.log('🔄 Réinitialisation des critères de recherche');
+    
     setSearchParams({
       numSinistre: '',
       nom: '',
@@ -260,6 +378,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const handleTabChange = (tabId) => {
+    console.log(`📑 Changement d'onglet: ${tabId}`);
     setActiveTab(tabId);
     handleReset();
   };
@@ -273,23 +392,42 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
         return `${day}/${month}/${year}`;
       }
       return dateStr;
-    } catch {
+    } catch (error) {
+      console.warn('⚠️ Erreur formatage date:', dateStr, error);
       return dateStr;
     }
   };
 
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      console.log(`📄 Changement de page: ${currentPage} → ${page}`);
       setCurrentPage(page);
     }
   };
 
   const handleViewDetails = (sinistre) => {
+    if (!sinistre?.numSinistre) {
+      setError('Impossible d\'accéder aux détails : numéro de sinistre manquant');
+      return;
+    }
+    
     console.log('🔍 Navigation vers détails du sinistre:', sinistre.numSinistre);
     navigate(`/consultation/sinistres/${sinistre.numSinistre}/details`, {
       state: { sinistre }
     });
   };
+
+  // ✅ Fonction pour nettoyer les messages d'erreur/succès après un délai
+  useEffect(() => {
+    if (error || successMessage) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccessMessage('');
+      }, 5000); // Effacer après 5 secondes
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error, successMessage]);
 
   const tabs = [
     { 
@@ -340,6 +478,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 onChange={(e) => setSearchParams({...searchParams, numSinistre: e.target.value})}
                 placeholder="Saisir le numéro complet (ex: SIN202400001)"
                 className="form-input"
+                maxLength={50}
               />
             </div>
             <div className="form-group">
@@ -376,6 +515,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
                 placeholder="Ex: Ouvert, Clôturé, En cours..."
                 className="form-input"
+                maxLength={50}
               />
             </div>
             <div className="form-group">
@@ -413,6 +553,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   onChange={(e) => setSearchParams({...searchParams, nom: e.target.value})}
                   placeholder="Nom de famille"
                   className="form-input"
+                  maxLength={100}
                 />
               </div>
               <div className="form-group">
@@ -425,6 +566,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   onChange={(e) => setSearchParams({...searchParams, prenom: e.target.value})}
                   placeholder="Prénom"
                   className="form-input"
+                  maxLength={100}
                 />
               </div>
             </div>
@@ -448,6 +590,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 </div>
               </div>
               <div className="form-group">
+                {/* Cellule vide pour l'alignement */}
               </div>
             </div>
             <div className="form-info">
@@ -469,6 +612,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 onChange={(e) => setSearchParams({...searchParams, natureMaladie: e.target.value})}
                 placeholder="Ex: Grippe, Soins dentaires, Consultation médicale..."
                 className="form-input"
+                maxLength={200}
               />
             </div>
             <div className="form-group">
@@ -506,6 +650,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   onChange={(e) => setSearchParams({...searchParams, numSinistre: e.target.value})}
                   placeholder="Numéro de sinistre"
                   className="form-input"
+                  maxLength={50}
                 />
               </div>
               <div className="form-group">
@@ -518,6 +663,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   onChange={(e) => setSearchParams({...searchParams, nom: e.target.value})}
                   placeholder="Nom de famille"
                   className="form-input"
+                  maxLength={100}
                 />
               </div>
             </div>
@@ -532,6 +678,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   onChange={(e) => setSearchParams({...searchParams, prenom: e.target.value})}
                   placeholder="Prénom"
                   className="form-input"
+                  maxLength={100}
                 />
               </div>
               <div className="form-group">
@@ -544,6 +691,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   onChange={(e) => setSearchParams({...searchParams, natureMaladie: e.target.value})}
                   placeholder="Type de maladie"
                   className="form-input"
+                  maxLength={200}
                 />
               </div>
             </div>
@@ -558,6 +706,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
                   placeholder="État"
                   className="form-input"
+                  maxLength={50}
                 />
               </div>
               <div className="form-group">
@@ -592,8 +741,18 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
 
   return (
     <div className={`consultation-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      {/* Header avec informations utilisateur */}
       <div className="page-header">
-        <h1 className="page-title">Consultation des Sinistres</h1>
+        <div className="page-header-main">
+          <h1 className="page-title">Consultation des Sinistres</h1>
+          {userInfo && (
+            <div className="user-info">
+              <span className="user-welcome">
+                Connecté en tant que <strong>{userInfo.name || userInfo.username}</strong>
+              </span>
+            </div>
+          )}
+        </div>
         <nav className="breadcrumb">
           <span>Sinistres</span>
           <span className="separator">›</span>
@@ -612,6 +771,8 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 className={`tab-button ${isActive ? 'active' : ''}`}
+                aria-selected={isActive}
+                role="tab"
               >
                 <IconComponent className="tab-icon" />
                 {tab.label}
@@ -623,13 +784,15 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
 
       <div className="form-container">
         {error && (
-          <div className="alert alert-error">
+          <div className="alert alert-error" role="alert">
+            <AlertCircle className="alert-icon" />
             {error}
           </div>
         )}
 
         {successMessage && (
-          <div className="alert alert-success">
+          <div className="alert alert-success" role="alert">
+            <Search className="alert-icon" />
             {successMessage}
           </div>
         )}
@@ -651,18 +814,21 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
             onClick={handleSearch}
             disabled={loading}
             className="btn btn-primary"
+            aria-label="Lancer la recherche"
           >
             {loading ? (
               <RefreshCw className="btn-icon animate-spin" />
             ) : (
               <Search className="btn-icon" />
             )}
-            Rechercher
+            {loading ? 'Recherche...' : 'Rechercher'}
           </button>
           
           <button
             onClick={handleReset}
+            disabled={loading}
             className="btn btn-secondary"
+            aria-label="Effacer les critères de recherche"
           >
             <RefreshCw className="btn-icon" />
             Effacer
@@ -672,39 +838,58 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
 
       {results.length > 0 && (
         <div className="results-container">
+          <div className="results-header">
+            <h4 className="results-title">
+              Résultats de la recherche ({totalResults} trouvé{totalResults > 1 ? 's' : ''})
+            </h4>
+            {userInfo && (
+              <div className="results-info">
+                <span className="results-timestamp">
+                  Recherche effectuée le {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR')}
+                </span>
+              </div>
+            )}
+          </div>
+          
           <div className="table-wrapper">
-            <table className="results-table">
+            <table className="results-table" role="table" aria-label="Résultats des sinistres">
               <thead>
-                <tr>
-                  <th>N° Sinistre</th>
-                  <th>Assuré</th>
-                  <th>Date Survenance</th>
-                  <th>État</th>
-                  <th>Nature Maladie</th>
-                  <th>Actions</th>
+                <tr role="row">
+                  <th scope="col">N° Sinistre</th>
+                  <th scope="col">Assuré</th>
+                  <th scope="col">Date Survenance</th>
+                  <th scope="col">État</th>
+                  <th scope="col">Nature Maladie</th>
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {getCurrentPageResults().map((sinistre, index) => (
-                  <tr key={sinistre.numSinistre || index}>
+                  <tr key={sinistre.numSinistre || `sinistre-${index}`} role="row">
                     <td>
                       <div className="cell-primary">
-                        {sinistre.numSinistreReduit || sinistre.numSinistre}
+                        {sinistre.numSinistreReduit || sinistre.numSinistre || 'N/A'}
                       </div>
-                      <div className="cell-secondary">
-                        {sinistre.numPolice}
-                      </div>
+                      {sinistre.numPolice && (
+                        <div className="cell-secondary">
+                          Police: {sinistre.numPolice}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div className="cell-primary">
-                        {sinistre.nomCompletAssure}
+                        {sinistre.nomCompletAssure || 'N/A'}
                       </div>
-                      <div className="cell-secondary">
-                        {sinistre.numAffiliation}
-                      </div>
+                      {sinistre.numAffiliation && (
+                        <div className="cell-secondary">
+                          Affiliation: {sinistre.numAffiliation}
+                        </div>
+                      )}
                     </td>
                     <td>
-                      {formatDate(sinistre.dateSurv)}
+                      <time dateTime={sinistre.dateSurv}>
+                        {formatDate(sinistre.dateSurv)}
+                      </time>
                     </td>
                     <td>
                       <span className={`status-badge ${
@@ -716,16 +901,20 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                           ? 'status-progress'
                           : 'status-default'
                       }`}>
-                        {sinistre.etatSinistreLibelle}
+                        {sinistre.etatSinistreLibelle || 'N/A'}
                       </span>
                     </td>
                     <td>
-                      {sinistre.natuMala || sinistre.refSpecialiteMaladieLibelle || 'N/A'}
+                      <div className="cell-truncate" title={sinistre.natuMala || sinistre.refSpecialiteMaladieLibelle || 'N/A'}>
+                        {sinistre.natuMala || sinistre.refSpecialiteMaladieLibelle || 'N/A'}
+                      </div>
                     </td>
                     <td>
                       <button 
                         onClick={() => handleViewDetails(sinistre)}
                         className="btn btn-small btn-outline"
+                        aria-label={`Voir les détails du sinistre ${sinistre.numSinistre || 'N/A'}`}
+                        disabled={!sinistre.numSinistre}
                       >
                         <Eye className="btn-icon" />
                         Détails
@@ -742,36 +931,102 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
               <div className="pagination-info">
                 Affichage de <span className="pagination-highlight">{((currentPage - 1) * 10) + 1}</span> à{' '}
                 <span className="pagination-highlight">{Math.min(currentPage * 10, totalResults)}</span> sur{' '}
-                <span className="pagination-highlight">{totalResults}</span> résultats
+                <span className="pagination-highlight">{totalResults}</span> résultat{totalResults > 1 ? 's' : ''}
               </div>
               
-              <div className="pagination-controls">
+              <div className="pagination-controls" role="navigation" aria-label="Pagination">
                 <button 
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className="pagination-btn"
+                  aria-label="Page précédente"
                 >
                   <ChevronLeft className="pagination-icon" />
+                  Précédent
                 </button>
                 
-                {[...Array(Math.min(5, totalPages))].map((_, index) => {
-                  const pageNum = index + 1;
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                {/* Génération intelligente des numéros de page */}
+                {(() => {
+                  const maxVisiblePages = 5;
+                  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                  
+                  // Ajuster startPage si on est proche de la fin
+                  if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                  }
+                  
+                  const pages = [];
+                  
+                  // Page 1 si elle n'est pas dans la plage visible
+                  if (startPage > 1) {
+                    pages.push(
+                      <button
+                        key={1}
+                        onClick={() => handlePageChange(1)}
+                        className="pagination-btn"
+                        aria-label="Aller à la page 1"
+                      >
+                        1
+                      </button>
+                    );
+                    
+                    if (startPage > 2) {
+                      pages.push(
+                        <span key="start-ellipsis" className="pagination-ellipsis">
+                          ...
+                        </span>
+                      );
+                    }
+                  }
+                  
+                  // Pages visibles
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        className={`pagination-btn ${currentPage === i ? 'active' : ''}`}
+                        aria-label={`${currentPage === i ? 'Page actuelle, ' : ''}Page ${i}`}
+                        aria-current={currentPage === i ? 'page' : undefined}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+                  
+                  // Page finale si elle n'est pas dans la plage visible
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pages.push(
+                        <span key="end-ellipsis" className="pagination-ellipsis">
+                          ...
+                        </span>
+                      );
+                    }
+                    
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => handlePageChange(totalPages)}
+                        className="pagination-btn"
+                        aria-label={`Aller à la page ${totalPages}`}
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+                  
+                  return pages;
+                })()}
                 
                 <button 
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="pagination-btn"
+                  aria-label="Page suivante"
                 >
+                  Suivant
                   <ChevronRight className="pagination-icon" />
                 </button>
               </div>
@@ -787,17 +1042,75 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
           </div>
           <div className="empty-state-content">
             <h3>Aucun résultat trouvé</h3>
-            <p>Effectuez une recherche pour consulter les sinistres selon vos critères.</p>
+            <p>
+              {activeTab === 'recherche-sinistre' && 'Aucun sinistre ne correspond au numéro recherché.'}
+              {activeTab === 'etat-sinistre' && 'Aucun sinistre ne correspond à l\'état recherché.'}
+              {activeTab === 'assure-nom-prenom' && 'Aucun sinistre ne correspond au nom/prénom recherché.'}
+              {activeTab === 'nature-maladie' && 'Aucune sinistre ne correspond à la nature de maladie recherchée.'}
+              {activeTab === 'recherche-combinee' && 'Aucun sinistre ne correspond aux critères de recherche combinés.'}
+            </p>
+            <div className="empty-state-suggestions">
+              <h4>Suggestions :</h4>
+              <ul>
+                <li>Vérifiez l'orthographe des termes de recherche</li>
+                <li>Essayez une recherche moins spécifique</li>
+                <li>Utilisez le type de correspondance "CONTIENT" pour élargir la recherche</li>
+                {activeTab !== 'recherche-combinee' && (
+                  <li>Essayez la recherche combinée pour plus de flexibilité</li>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
       )}
 
       {loading && (
-        <div className="loading-state">
-          <RefreshCw className="loading-spinner" />
+        <div className="loading-state" role="status" aria-live="polite">
+          <div className="loading-spinner-container">
+            <RefreshCw className="loading-spinner" />
+          </div>
           <div className="loading-content">
             <h3>Recherche en cours...</h3>
-            <p>Veuillez patienter pendant que nous recherchons les sinistres.</p>
+            <p>
+              {activeTab === 'recherche-sinistre' && 'Recherche du sinistre par numéro...'}
+              {activeTab === 'etat-sinistre' && 'Recherche des sinistres par état...'}
+              {activeTab === 'assure-nom-prenom' && 'Recherche des sinistres par nom/prénom...'}
+              {activeTab === 'nature-maladie' && 'Recherche des sinistres par nature de maladie...'}
+              {activeTab === 'recherche-combinee' && 'Recherche combinée en cours...'}
+            </p>
+            <div className="loading-progress">
+              <div className="loading-bar"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Message d'aide contextuel */}
+      {!loading && results.length === 0 && !error && (
+        <div className="help-section">
+          <div className="help-content">
+            <h4>
+              <ClipboardList className="help-icon" />
+              Guide de recherche
+            </h4>
+            <div className="help-grid">
+              <div className="help-item">
+                <strong>Recherche exacte :</strong>
+                <p>Le terme doit correspondre exactement</p>
+              </div>
+              <div className="help-item">
+                <strong>Contient :</strong>
+                <p>Le terme peut apparaître n'importe où dans le champ</p>
+              </div>
+              <div className="help-item">
+                <strong>Commence par :</strong>
+                <p>Le champ doit commencer par le terme recherché</p>
+              </div>
+              <div className="help-item">
+                <strong>Se termine par :</strong>
+                <p>Le champ doit se terminer par le terme recherché</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

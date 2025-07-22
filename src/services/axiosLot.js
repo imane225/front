@@ -1,20 +1,171 @@
 // 📁 src/services/axiosLot.js
 import axios from 'axios';
+import { getAuthToken, isTokenValid, clearAuthToken } from '../config/auth';
 
+/**
+ * Instance Axios configurée pour l'API des lots
+ */
 const api = axios.create({
-  baseURL: 'http://localhost:9999/rest/api/lots', // ✅ ici l'URL de ton backend pour les lots
+  baseURL: 'http://localhost:8089/rest/api/lots',
+  timeout: 10000, // Timeout de 10 secondes
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
 });
 
+/**
+ * Intercepteur de requête pour ajouter automatiquement le token d'authentification
+ */
 api.interceptors.request.use(
   (config) => {
-    const token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJUUll0aUpNY2c1aUF1UV9YUG9tZ3ZnWVBBeTc0dDJoalBUa09pUDY2X053In0.eyJleHAiOjE3NTE5OTA1NzMsImlhdCI6MTc1MTk5MDI3MywianRpIjoiNjk2OTUxMzEtMWI1Yy00ODc2LTk2MDMtYTZkNTk1YTA0ZjllIiwiaXNzIjoiaHR0cHM6Ly9hY2Nlc3MtZHkucm1hYXNzdXJhbmNlLmNvbS9hdXRoL3JlYWxtcy9ybWEtYWQiLCJhdWQiOlsicmVhbG0tbWFuYWdlbWVudCIsImFjY291bnQiXSwic3ViIjoiY2M3ZWViN2QtMmU1NC00YWI1LWExNTUtM2U3NTAxNmY3ZGQwIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibm92YXMiLCJzZXNzaW9uX3N0YXRlIjoiYWU3YmNlOGItZTQ2My00NGNkLWI1NDYtZDU4MWZlOGM2MzE0IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLXJtYS1hZCIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJyZWFsbS1tYW5hZ2VtZW50Ijp7InJvbGVzIjpbInZpZXctdXNlcnMiLCJxdWVyeS1ncm91cHMiLCJxdWVyeS11c2VycyJdfSwiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYWU3YmNlOGItZTQ2My00NGNkLWI1NDYtZDU4MWZlOGM2MzE0IiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiWmluZWIgSEFSUkFHVUkiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzMDAwMTQ5NSIsImdpdmVuX25hbWUiOiJaaW5lYiIsImZhbWlseV9uYW1lIjoiSEFSUkFHVUkiLCJlbWFpbCI6InouaGFycmFndWlAcm1hYXNzdXJhbmNlLmNvbSJ9.mWx7z_XIzOnr1kukpHFEHekH_2umsIRsEJlGUcSxjv1pMd_tryNi1SKFtLzexLx2if3A30DN8v7pXHqxyr6OAsEaq-iJ0zJkLEQWwwieVZzEAdc1Ts6MT-5sW--9L-lcbzfABnNh1z9jua5Kw8bz0uzHwAeJofrq1uBWaPvjhymt1cmv87CUOxcKavFiEVpv5tFGw2fyt1S1hIJB5-Y-IImkG4BOjuq5uudAuzzAVgiVgu6zRsUNRg7YI3BG-S4EuNad_tzD-MQ-lPiBhiCvKru4nsLBQtCNmBxew5FsynV5G7iTQ7xBS_We0wz-VeUM3OiAoGDOnxT_5s2AuljdVg"; // remplace par ton token temporaire
-    if (token) {
+    const token = getAuthToken();
+    
+    if (token && isTokenValid(token)) {
       config.headers['Authorization'] = `Bearer ${token}`;
+      console.log('🔑 Token valide ajouté à la requête (lots)');
+    } else if (token) {
+      console.warn('⚠️ Token expiré détecté (lots) - Suppression du localStorage');
+      clearAuthToken();
+      // Note: Dans un vrai système, vous pourriez rediriger vers la page de login ici
+    } else {
+      console.warn('⚠️ Aucun token disponible pour la requête (lots)');
     }
+    
+    // Assurer que Content-Type est défini
     config.headers['Content-Type'] = 'application/json';
+    
+    console.log(`🌐 Requête ${config.method?.toUpperCase()} vers: ${config.url}`);
+    
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('❌ Erreur dans l\'intercepteur de requête (lots):', error);
+    return Promise.reject(error);
+  }
 );
 
+/**
+ * Intercepteur de réponse pour gérer les erreurs d'authentification
+ */
+api.interceptors.response.use(
+  (response) => {
+    console.log(`✅ Réponse reçue (lots): ${response.status}`);
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      const { status, data } = error.response;
+      
+      switch (status) {
+        case 401:
+          console.error('🚫 Erreur d\'authentification (lots) - Token invalide ou expiré');
+          clearAuthToken();
+          // Vous pourriez déclencher une redirection vers la page de login ici
+          break;
+        case 403:
+          console.error('🚫 Accès interdit (lots) - Permissions insuffisantes');
+          break;
+        case 404:
+          console.error('🔍 Ressource non trouvée (lots)');
+          break;
+        case 500:
+          console.error('💥 Erreur serveur interne (lots)');
+          break;
+        default:
+          console.error(`❌ Erreur HTTP ${status} (lots):`, data);
+      }
+    } else if (error.request) {
+      console.error('🌐 Erreur réseau (lots) - Pas de réponse du serveur');
+    } else {
+      console.error('❌ Erreur lors de la configuration de la requête (lots):', error.message);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * Fonctions utilitaires pour les opérations sur les lots
+ */
+
+/**
+ * Récupère tous les lots
+ * @param {object} params - Paramètres de requête (pagination, filtres, etc.)
+ * @returns {Promise} Promesse résolue avec les données des lots
+ */
+export const getAllLots = async (params = {}) => {
+  try {
+    const response = await api.get('/', { params });
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des lots:', error);
+    throw error;
+  }
+};
+
+/**
+ * Récupère un lot spécifique par son ID
+ * @param {string|number} lotId - ID du lot
+ * @returns {Promise} Promesse résolue avec les données du lot
+ */
+export const getLotById = async (lotId) => {
+  try {
+    const response = await api.get(`/${lotId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Erreur lors de la récupération du lot ${lotId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Crée un nouveau lot
+ * @param {object} lotData - Données du lot à créer
+ * @returns {Promise} Promesse résolue avec les données du lot créé
+ */
+export const createLot = async (lotData) => {
+  try {
+    const response = await api.post('/', lotData);
+    console.log('✅ Lot créé avec succès');
+    return response.data;
+  } catch (error) {
+    console.error('❌ Erreur lors de la création du lot:', error);
+    throw error;
+  }
+};
+
+/**
+ * Met à jour un lot existant
+ * @param {string|number} lotId - ID du lot à mettre à jour
+ * @param {object} lotData - Nouvelles données du lot
+ * @returns {Promise} Promesse résolue avec les données du lot mis à jour
+ */
+export const updateLot = async (lotId, lotData) => {
+  try {
+    const response = await api.put(`/${lotId}`, lotData);
+    console.log(`✅ Lot ${lotId} mis à jour avec succès`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Erreur lors de la mise à jour du lot ${lotId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Supprime un lot
+ * @param {string|number} lotId - ID du lot à supprimer
+ * @returns {Promise} Promesse résolue une fois le lot supprimé
+ */
+export const deleteLot = async (lotId) => {
+  try {
+    await api.delete(`/${lotId}`);
+    console.log(`✅ Lot ${lotId} supprimé avec succès`);
+  } catch (error) {
+    console.error(`❌ Erreur lors de la suppression du lot ${lotId}:`, error);
+    throw error;
+  }
+};
+
+// Export de l'instance axios par défaut pour des utilisations personnalisées
 export default api;

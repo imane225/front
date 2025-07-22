@@ -9,7 +9,6 @@ const rechercherParNumeroLot = async (numeroLot) => {
   return { data: [response.data] }; // le backend retourne un seul objet, on le met en tableau
 };
 
-
 /**
  * 🔍 Rechercher un lot par ID
  */
@@ -44,12 +43,10 @@ const createLotExterne = async (lotDto) => {
   return { data: response.data };
 };
 
-
-
 /**
  * 🔎 Infos contrat/police
  */
-export const fetchInfosPolice = async (numeroPolice) => {
+const fetchInfosPolice = async (numeroPolice) => {
   const response = await api.get(`/info-police/${numeroPolice}`);
   return response.data;
 };
@@ -69,24 +66,30 @@ const modifierLotsBatch = async (lotList) => {
   const response = await api.put(`/batch`, lotList);
   return { data: response.data };
 };
-const handleLogin = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
 
-    if (!response.ok) throw new Error('Erreur d’authentification');
+/**
+ * 🔄 Récupérer tous les lots (utilisé par le dashboard)
+ */
+const getAllLots = async () => {
+  // ⚠️ Si tu n'as pas d'endpoint dédié, on utilise celui de recherche par police avec champs vides
+  const response = await api.get(`/by-police/`, {
+    params: {
+      numeroPolice: '',  // vide pour tout récupérer
+      dateDebut: '2000-01-01',
+      dateFin: '2100-01-01'
+    }
+  });
+  return { data: response.data };
+};
 
-    const data = await response.json();
-    localStorage.setItem('access_token', data.access_token);
-
-    // rediriger vers autre page
-  } catch (error) {
-    console.error(error);
-    alert('Login échoué');
-  }
+/**
+ * 📊 Récupérer les lots par police et date (version alternative)
+ */
+const getLotsByPoliceAndDate = async (numeroPolice, dateDebut, dateFin) => {
+  const response = await api.get(`/by-police/${numeroPolice}`, {
+    params: { dateDebut, dateFin }
+  });
+  return response.data;
 };
 
 /**
@@ -99,27 +102,7 @@ const handleAPIError = (error) => {
   if (error.message?.includes('Network Error')) return 'Impossible de contacter le serveur';
   return error.message || 'Erreur inconnue';
 };
-/**
- * 🔄 Récupérer tous les lots (utilisé par le dashboard)
- */
-const getAllLots = async () => {
-  // ⚠️ Si tu n’as pas d’endpoint dédié, on utilise celui de recherche par police avec champs vides
-  const response = await api.get(`/by-police/`, {
-    params: {
-      numeroPolice: '',  // vide pour tout récupérer
-      dateDebut: '2000-01-01',
-      dateFin: '2100-01-01'
-    }
-  });
-  return { data: response.data };
-};
 
-const getLotsByPoliceAndDate = async (numeroPolice, dateDebut, dateFin) => {
-  const response = await api.get(`/by-police/${numeroPolice}`, {
-    params: { dateDebut, dateFin }
-  });
-  return response.data;
-};
 export default {
   getAllLots,
   rechercherParNumeroLot,
