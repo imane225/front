@@ -1,21 +1,36 @@
+/* Définition des variables CSS pour une meilleure maintenabilité */
+:root {
+  --sidebar-bg-start: #234585;
+  --sidebar-bg-end: #1a3660;
+  --text-color-light: rgba(255, 255, 255, 0.85);
+  --text-color-active: white;
+  --sidebar-width-expanded: 250px;
+  --sidebar-width-collapsed: 64px;
+  --transition-duration: 0.3s;
+  --transition-cubic-bezier: cubic-bezier(0.4, 0, 0.2, 1);
+  --border-radius-lg: 16px;
+  --border-radius-md: 12px;
+  --box-shadow-base: 0 10px 25px rgba(35, 69, 133, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+  --glass-effect-blur: 10px;
+}
 
 .rma-sidebar {
-  width: 250px;
+  width: var(--sidebar-width-expanded); /* Largeur par défaut (ouverte sur desktop) */
   height: 100vh;
-  background: linear-gradient(180deg, #234585 0%, #1a3660 100%);
+  background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
   position: fixed;
   left: 0;
   top: 0;
   z-index: 20;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-duration) var(--transition-cubic-bezier);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 25px rgba(35, 69, 133, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
+  box-shadow: var(--box-shadow-base);
+  backdrop-filter: blur(var(--glass-effect-blur));
 }
 
 .rma-sidebar.collapsed {
-  width: 64px;
+  width: var(--sidebar-width-collapsed); /* Largeur réduite (fermée sur desktop) */
 }
 
 .rma-sidebar-header {
@@ -24,7 +39,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  height: 6.5rem;
+  height: 5rem;
   position: relative;
 }
 
@@ -44,8 +59,8 @@
   color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   padding: 0.75rem;
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-duration) var(--transition-cubic-bezier);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,7 +82,7 @@
 .rma-sidebar-toggle:hover {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.25);
-  color: white;
+  color: var(--text-color-active);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -105,12 +120,12 @@
   display: flex;
   align-items: center;
   padding: 1rem 1.5rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-color-light);
   text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-duration) var(--transition-cubic-bezier);
   border-radius: 0;
   margin: 0 1rem;
-  border-radius: 16px;
+  border-radius: var(--border-radius-lg);
   gap: 1rem;
   position: relative;
   overflow: hidden;
@@ -126,13 +141,13 @@
   right: 0;
   bottom: 0;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  border-radius: var(--border-radius-lg);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-duration) ease;
 }
 
 .rma-sidebar-link:hover {
-  color: white;
+  color: var(--text-color-active);
   transform: translateX(4px);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -144,10 +159,10 @@
 
 .rma-sidebar-link.active {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-  color: white;
+  color: var(--text-color-active);
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(var(--glass-effect-blur));
 }
 
 .rma-sidebar-link.active::before {
@@ -172,7 +187,7 @@
   font-weight: 500;
   white-space: nowrap;
   opacity: 1;
-  transition: all 0.3s ease;
+  transition: all var(--transition-duration) ease;
   flex: 1;
   letter-spacing: 0.3px;
 }
@@ -182,13 +197,13 @@
   display: flex;
   align-items: center;
   color: rgba(255, 255, 255, 0.7);
-  transition: all 0.3s ease;
+  transition: all var(--transition-duration) ease;
   padding: 0.25rem;
   border-radius: 6px;
 }
 
 .rma-sidebar-link:hover .rma-sidebar-arrow {
-  color: white;
+  color: var(--text-color-active);
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -214,9 +229,9 @@
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 1rem;
-  border-radius: 16px;
+  border-radius: var(--border-radius-lg);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(var(--glass-effect-blur));
   position: relative;
   overflow: hidden;
 }
@@ -255,7 +270,7 @@
   margin: 0.5rem 1rem 0 1rem;
   padding: 0;
   background: rgba(0, 0, 0, 0.15);
-  border-radius: 16px;
+  border-radius: var(--border-radius-lg);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(5px);
@@ -273,12 +288,12 @@
   padding: 0.875rem 1.5rem 0.875rem 3rem;
   color: rgba(255, 255, 255, 0.75);
   text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-duration) var(--transition-cubic-bezier);
   gap: 0.75rem;
   font-size: 0.875rem;
   font-weight: 400;
   position: relative;
-  border-radius: 12px;
+  border-radius: var(--border-radius-md);
   margin: 0.25rem;
 }
 
@@ -292,25 +307,25 @@
   height: 6px;
   background: rgba(255, 255, 255, 0.4);
   border-radius: 50%;
-  transition: all 0.3s ease;
+  transition: all var(--transition-duration) ease;
 }
 
 .rma-sidebar-sublink:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--text-color-active);
   transform: translateX(4px);
   padding-left: 3.25rem;
 }
 
 .rma-sidebar-sublink:hover::before {
-  background: white;
+  background: var(--text-color-active);
   transform: translateY(-50%) scale(1.2);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
 .rma-sidebar-sublink.active {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-  color: white;
+  color: var(--text-color-active);
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -342,24 +357,26 @@
 }
 
 .rma-sidebar-submenu {
-  animation: slideInFromLeft 0.3s ease-out;
+  animation: slideInFromLeft var(--transition-duration) ease-out;
 }
 
 
 @media (max-width: 768px) {
   .rma-sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease;
+    /* Sur mobile, la sidebar est cachée par défaut */
+    width: var(--sidebar-width-expanded); /* Conserve la largeur complète pour le slide-in */
+    transform: translateX(-100%); /* Cachée par défaut */
+    transition: transform 0.4s var(--transition-cubic-bezier); /* Transition pour l'ouverture/fermeture mobile */
     box-shadow: 0 0 50px rgba(35, 69, 133, 0.3);
   }
-  
+
   .rma-sidebar.mobile-open {
-    transform: translateX(0);
+    transform: translateX(0); /* Visible sur mobile */
   }
-  
-  .rma-sidebar.collapsed {
-    width: 250px;
-  }
+
+  /* IMPORTANT : La règle .rma-sidebar.collapsed n'est plus nécessaire ici. */
+  /* Le comportement "fermée" sur mobile est géré par transform: translateX(-100%) sur .rma-sidebar */
+  /* et "ouverte" par .rma-sidebar.mobile-open. */
 }
 
 

@@ -1,8 +1,37 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  ArrowLeft, 
+  Package, 
+  FileText, 
+  Calendar, 
+  Building,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Plus,
+  Minus,
+  Users,
+  Hash,
+  Info,
+  Save,
+  RefreshCw
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import lotService from '../services/lotService';
-import './ConsultationSinistres.css';
+import './CreerSinistre.css'; // ✅ Utilise le CSS de CreerSinistre
 
-const CreationLot = () => {
+const CreationLot = ({ sidebarCollapsed = false }) => {
+  const navigate = useNavigate();
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [expandedSections, setExpandedSections] = useState({
+    obligatoires: true,
+    optionnels: false,
+    infos: false
+  });
+
   const [formData, setFormData] = useState({
     numeroPolice: '',
     typeLotId: '',
@@ -11,11 +40,36 @@ const CreationLot = () => {
     raisonSocialeClient: '' // champ pour affichage client
   });
 
-  const [infosPolice, setInfosPolice] = useState(null); //  infos récupérées
-  const [successMessage, setSuccessMessage] = useState('');
-  const [error, setError] = useState('');
+  const [infosPolice, setInfosPolice] = useState(null); // infos récupérées
+  const [validationErrors, setValidationErrors] = useState({});
 
-  //  Récupération automatique infos police
+  const handleBack = () => {
+    navigate('/lots');
+  };
+
+  const toggleSection = (sectionName) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName]
+    }));
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Effacer l'erreur de validation pour ce champ
+    if (validationErrors[field] && value.trim()) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [field]: null
+      }));
+    }
+  };
+
+  // Récupération automatique infos police
   useEffect(() => {
     const fetchInfos = async () => {
       if (formData.numeroPolice.length === 10) {
@@ -35,27 +89,84 @@ const CreationLot = () => {
             ...prev,
             raisonSocialeClient: infos.raisonSocialeClient
           }));
+
+          // Ouvrir automatiquement la section des infos
+          setExpandedSections(prev => ({
+            ...prev,
+            infos: true
+          }));
         } catch (err) {
           console.error('Erreur lors de la récupération des infos police:', err);
           setInfosPolice(null);
-          // Optionnel: vous pourriez aussi afficher un message d'erreur à l'utilisateur
-          // setError('Impossible de récupérer les informations de la police');
         }
+      } else {
+        setInfosPolice(null);
+        setExpandedSections(prev => ({
+          ...prev,
+          infos: false
+        }));
       }
     };
 
     fetchInfos();
   }, [formData.numeroPolice]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const validateForm = () => {
+    const errors = {};
+    
+    // Validation du numéro de police
+    if (!formData.numeroPolice.trim()) {
+      errors.numeroPolice = 'Le numéro de police est obligatoire';
+    } else if (formData.numeroPolice.length !== 10) {
+      errors.numeroPolice = 'Le numéro de police doit contenir exactement 10 caractères';
+    }
+    
+    // Validation du type de lot
+    if (!formData.typeLotId.trim()) {
+      errors.typeLotId = 'Le type de lot est obligatoire';
+    }
+    
+    // Validation du nombre de sinistres reçus
+    if (!formData.nombreSinistresRecu || formData.nombreSinistresRecu === '') {
+      errors.nombreSinistresRecu = 'Le nombre de sinistres reçus est obligatoire';
+    } else {
+      const nombre = parseInt(formData.nombreSinistresRecu);
+      if (isNaN(nombre) || nombre < 0) {
+        errors.nombreSinistresRecu = 'Le nombre doit être un entier positif';
+      }
+    }
+    
+    // Validation conditionnelle pour les lots externes
+    if (formData.typeLotId === '2') {
+      if (!formData.nombreSinistresDeclare || formData.nombreSinistresDeclare === '') {
+        errors.nombreSinistresDeclare = 'Le nombre de sinistres déclarés est obligatoire pour les lots externes';
+      } else {
+        const nombre = parseInt(formData.nombreSinistresDeclare);
+        if (isNaN(nombre) || nombre < 0) {
+          errors.nombreSinistresDeclare = 'Le nombre doit être un entier positif';
+        }
+      }
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleCreate = async () => {
-    setError('');
-    setSuccessMessage('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      setError('Veuillez corriger les erreurs dans le formulaire');
+      return;
+    }
 
     try {
+      setLoading(true);
+      setError('');
+      setSuccessMessage('');
+      
+      console.log('🚀 Création du lot avec:', formData);
+      
       const payload = {
         ...formData,
         nombreSinistresRecu: parseInt(formData.nombreSinistresRecu),
@@ -64,108 +175,325 @@ const CreationLot = () => {
           : null
       };
 
-      const res = await lotService.createLotInterne(payload);
-      setSuccessMessage(`Lot créé avec succès : ${res.data.numeroLot}`);
+      console.log('📤 Données envoyées au backend:', payload);
+      
+      const response = await lotService.createLotInterne(payload);
+      
+      console.log('✅ Lot créé:', response);
+      
+      setSuccessMessage(`Lot créé avec succès ! Numéro: ${response.data.numeroLot}`);
+      
+      setTimeout(() => {
+        if (response.data?.id) {
+          navigate(`/lots/details/${response.data.id}`);
+        } else {
+          navigate('/lots');
+        }
+      }, 2000);
+      
     } catch (err) {
+      console.error('❌ Erreur lors de la création:', err);
       setError(lotService.handleAPIError(err));
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="consultation-container">
-      <div className="page-header">
-        <h1 className="page-title">Création d'un Lot Sinistre</h1>
+  const resetForm = () => {
+    setFormData({
+      numeroPolice: '',
+      typeLotId: '',
+      nombreSinistresRecu: '',
+      nombreSinistresDeclare: '',
+      raisonSocialeClient: ''
+    });
+    setValidationErrors({});
+    setError('');
+    setSuccessMessage('');
+    setInfosPolice(null);
+  };
+
+  const InputField = ({ label, value, onChange, error, required = false, type = 'text', placeholder = '', maxLength = null, disabled = false }) => (
+    <div className="input-field">
+      <label className={`input-label ${required ? 'required' : ''}`}>
+        {label}
+        {required && <span className="required-star">*</span>}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`input-control ${error ? 'error' : ''} ${disabled ? 'disabled' : ''}`}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        disabled={disabled}
+      />
+      {error && <span className="error-message">{error}</span>}
+    </div>
+  );
+
+  const SelectField = ({ label, value, onChange, options, error, required = false }) => (
+    <div className="input-field">
+      <label className={`input-label ${required ? 'required' : ''}`}>
+        {label}
+        {required && <span className="required-star">*</span>}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`input-control ${error ? 'error' : ''}`}
+      >
+        <option value="">-- Sélectionner --</option>
+        {options.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {error && <span className="error-message">{error}</span>}
+    </div>
+  );
+
+  const ExpandableCard = ({ title, icon, children, sectionKey, badgeText = null }) => {
+    const IconElement = icon;
+    
+    return (
+      <div className="form-card">
+        <div 
+          className="card-header clickable" 
+          onClick={() => toggleSection(sectionKey)}
+        >
+          <div className="card-title">
+            <IconElement className="card-icon" />
+            <span>{title}</span>
+            {badgeText && (
+              <span className="section-badge">{badgeText}</span>
+            )}
+          </div>
+          <div className="expand-controls">
+            {expandedSections[sectionKey] ? (
+              <Minus className="expand-icon" />
+            ) : (
+              <Plus className="expand-icon" />
+            )}
+          </div>
+        </div>
+        
+        {expandedSections[sectionKey] && (
+          <div className="card-content">
+            {children}
+          </div>
+        )}
       </div>
+    );
+  };
 
-      <div className="form-container">
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
-        {error && <div className="alert alert-error">{error}</div>}
+  return (
+    <div className={`create-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <nav className="breadcrumb">
+        <span onClick={handleBack} className="breadcrumb-link">Accueil</span>
+        <span className="separator">›</span>
+        <span onClick={handleBack} className="breadcrumb-link">Lots</span>
+        <span className="separator">›</span>
+        <span className="current">Créer Lot</span>
+      </nav>
 
-        <div className="form-grid form-grid-2">
-          <div className="form-group">
-            <label>Numéro de Police *</label>
-            <input
-              type="text"
-              name="numeroPolice"
-              className="form-input"
-              value={formData.numeroPolice}
-              onChange={handleChange}
-              required
-            />
+      <div className="create-header">
+        <div className="header-main">
+          <h1 className="page-title">
+            <Package className="title-icon" />
+            Création d'un Lot Sinistre
+          </h1>
+          <div className="status-container">
+            <FileText className="status-icon" />
+            <span className="status-badge status-new">Nouveau</span>
           </div>
-
-          <div className="form-group">
-            <label>Type de Lot *</label>
-            <select
-              name="typeLotId"
-              className="form-input"
-              value={formData.typeLotId}
-              onChange={handleChange}
-              required
-            >
-              <option value="">-- Sélectionner --</option>
-              <option value="1">Interne</option>
-              <option value="2">Externe</option>
-            </select>
+        </div>
+        
+        <div className="header-summary">
+          <div className="summary-item">
+            <span className="summary-label">Type</span>
+            <span className="summary-value">Lot de sinistres</span>
           </div>
-
-          <div className="form-group">
-            <label>Nombre de sinistres reçus *</label>
-            <input
-              type="number"
-              name="nombreSinistresRecu"
-              className="form-input"
-              value={formData.nombreSinistresRecu}
-              onChange={handleChange}
-              required
-            />
+          <div className="summary-item">
+            <span className="summary-label">Statut</span>
+            <span className="summary-value">En cours de création</span>
           </div>
-
-          {formData.typeLotId === '2' && (
-            <div className="form-group">
-              <label>Nombre de sinistres déclarés *</label>
-              <input
-                type="number"
-                name="nombreSinistresDeclare"
-                className="form-input"
-                value={formData.nombreSinistresDeclare}
-                onChange={handleChange}
-              />
+          {infosPolice && (
+            <div className="summary-item">
+              <span className="summary-label">Client</span>
+              <span className="summary-value">{infosPolice.raisonSocialeClient}</span>
             </div>
           )}
         </div>
 
-        {infosPolice && (
-          <div className="form-grid form-grid-2 mt-3">
-            <div className="form-group">
-              <label>Client</label>
-              <input className="form-input" value={infosPolice.raisonSocialeClient} disabled />
-            </div>
-            <div className="form-group">
-              <label>Code Apporteur</label>
-              <input className="form-input" value={infosPolice.codeApporteur} disabled />
-            </div>
-            <div className="form-group">
-              <label>Raison Sociale Apporteur</label>
-              <input className="form-input" value={infosPolice.raisonApporteur} disabled />
-            </div>
-            <div className="form-group">
-              <label>État de la Police</label>
-              <input className="form-input" value={infosPolice.etatPolice} disabled />
-            </div>
-            <div className="form-group">
-              <label>Date État Police</label>
-              <input className="form-input" value={infosPolice.dateEtat} disabled />
-            </div>
-          </div>
-        )}
-
-        <div className="form-actions">
-          <button className="btn btn-primary" onClick={handleCreate}>
-            Créer le lot
+        <div className="header-actions">
+          <button 
+            type="button"
+            onClick={resetForm} 
+            className="btn btn-outline"
+            disabled={loading}
+          >
+            <RefreshCw className="btn-icon" />
+            Réinitialiser
+          </button>
+          
+          <button onClick={handleBack} className="btn btn-secondary">
+            <ArrowLeft className="btn-icon" />
+            Retour aux lots
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="alert alert-error">
+          <AlertCircle className="alert-icon" />
+          <div className="alert-content">
+            <strong>Erreur :</strong> {error}
+            {error.includes('police non trouvée') && (
+              <div className="alert-help">
+                💡 <strong>Aide :</strong> Vérifiez que le numéro de police existe et contient exactement 10 caractères.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="alert alert-success">
+          <CheckCircle className="alert-icon" />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="create-form">
+        <div className="form-grid">
+          
+          <ExpandableCard 
+            title="Informations Obligatoires" 
+            icon={AlertCircle} 
+            sectionKey="obligatoires"
+            badgeText="Requis"
+          >
+            <div className="input-grid">
+              <InputField
+                label="Numéro de Police"
+                value={formData.numeroPolice}
+                onChange={(value) => handleInputChange('numeroPolice', value)}
+                error={validationErrors.numeroPolice}
+                required
+                placeholder="Ex: 1234567890 (10 caractères)"
+                maxLength={10}
+              />
+              
+              <SelectField
+                label="Type de Lot"
+                value={formData.typeLotId}
+                onChange={(value) => handleInputChange('typeLotId', value)}
+                error={validationErrors.typeLotId}
+                required
+                options={[
+                  { value: '1', label: 'Interne' },
+                  { value: '2', label: 'Externe' }
+                ]}
+              />
+              
+              <InputField
+                label="Nombre de Sinistres Reçus"
+                value={formData.nombreSinistresRecu}
+                onChange={(value) => handleInputChange('nombreSinistresRecu', value)}
+                error={validationErrors.nombreSinistresRecu}
+                required
+                type="number"
+                placeholder="0"
+              />
+              
+              {formData.typeLotId === '2' && (
+                <InputField
+                  label="Nombre de Sinistres Déclarés"
+                  value={formData.nombreSinistresDeclare}
+                  onChange={(value) => handleInputChange('nombreSinistresDeclare', value)}
+                  error={validationErrors.nombreSinistresDeclare}
+                  required
+                  type="number"
+                  placeholder="0"
+                />
+              )}
+            </div>
+          </ExpandableCard>
+
+          {infosPolice && (
+            <ExpandableCard 
+              title="Informations Police Récupérées" 
+              icon={Info} 
+              sectionKey="infos"
+              badgeText="Auto-remplies"
+            >
+              <div className="input-grid">
+                <InputField
+                  label="Client"
+                  value={infosPolice.raisonSocialeClient}
+                  onChange={() => {}}
+                  disabled
+                />
+                
+                <InputField
+                  label="Code Apporteur"
+                  value={infosPolice.codeApporteur}
+                  onChange={() => {}}
+                  disabled
+                />
+                
+                <InputField
+                  label="Raison Sociale Apporteur"
+                  value={infosPolice.raisonApporteur}
+                  onChange={() => {}}
+                  disabled
+                />
+                
+                <InputField
+                  label="État de la Police"
+                  value={infosPolice.etatPolice}
+                  onChange={() => {}}
+                  disabled
+                />
+                
+                <InputField
+                  label="Date État Police"
+                  value={infosPolice.dateEtat}
+                  onChange={() => {}}
+                  disabled
+                />
+              </div>
+              
+              <div className="form-help-message">
+                <Info className="help-icon" />
+                Ces informations ont été récupérées automatiquement à partir du numéro de police.
+              </div>
+            </ExpandableCard>
+          )}
+        </div>
+
+        <div className="form-actions">
+          <button 
+            type="submit" 
+            className="btn btn-primary btn-large"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Clock className="btn-icon spinning" />
+                Création en cours...
+              </>
+            ) : (
+              <>
+                <Save className="btn-icon" />
+                Créer le Lot
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

@@ -1,23 +1,37 @@
+/* RMANavbar.css */
 .rma-navbar {
   background-color: #ffffff;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-bottom: 1px solid #d1d5db;
-  width: 98%;
-  position: relative;
-  z-index: 10;
-  margin-left: 37px;
+  
+  /* Navbar fixe */
+  position: fixed;
+  top: 0;
+  left: 250px; /* Largeur de la sidebar ouverte */
+  right: 0;
+  z-index: 1000;
+  height: 80px; /* Hauteur fixe de 80px (5rem) */
+  
+  /* Transition pour l'animation */
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Navbar quand sidebar est fermée/réduite */
+.rma-navbar.sidebar-collapsed {
+  left: 64px; /* Même largeur que .rma-sidebar.collapsed */
 }
 
 .rma-navbar-container {
   max-width: 100%;
   padding: 0 1.5rem;
+  height: 100%;
 }
 
 .rma-navbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 6.5rem;
+  height: 100%;
 }
 
 .rma-navbar-logo {
@@ -25,8 +39,15 @@
   align-items: center;
 }
 
+.rma-navbar-logo a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  height: 100%;
+}
+
 .rma-navbar-logo img {
-  height: 6rem;
+  height: 4rem; 
   width: auto;
   object-fit: contain;
 }
@@ -42,8 +63,8 @@
 }
 
 .rma-navbar-logo-circle {
-  width: 3rem;
-  height: 3rem;
+  width: 2.5rem;
+  height: 2.5rem;
   background-color: #1e3a8a;
   border-radius: 50%;
   display: flex;
@@ -54,7 +75,7 @@
 .rma-navbar-logo-circle span {
   color: white;
   font-weight: bold;
-  font-size: 1.125rem;
+  font-size: 1rem;
 }
 
 .rma-navbar-logo-text {
@@ -65,16 +86,15 @@
 .rma-navbar-logo-title {
   color: #1e3a8a;
   font-weight: bold;
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
 .rma-navbar-logo-subtitle {
   color: #1e3a8a;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   line-height: 1;
 }
-
 
 .rma-navbar-actions {
   display: flex;
@@ -82,10 +102,9 @@
   gap: 0.75rem;
 }
 
-
 .rma-navbar-button {
-  padding: 0.75rem;
-  border-radius: 14px;
+  padding: 0.6rem;
+  border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(35, 69, 133, 0.05);
   border: 1px solid rgba(35, 69, 133, 0.1);
@@ -125,7 +144,6 @@
   transform: translateY(0);
 }
 
-
 .rma-navbar-user-menu {
   position: relative;
 }
@@ -133,9 +151,9 @@
 .rma-navbar-user-button {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 16px;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  border-radius: 14px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(135deg, rgba(35, 69, 133, 0.08), rgba(35, 69, 133, 0.05));
   border: 1px solid rgba(35, 69, 133, 0.12);
@@ -171,17 +189,16 @@
   transform: translateX(100%);
 }
 
-
 .rma-navbar-user-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: linear-gradient(135deg, #234585, #1a3660);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(35, 69, 133, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.2);
@@ -196,7 +213,6 @@
   transform: rotate(180deg);
   color: #234585;
 }
-
 
 .rma-navbar-dropdown {
   position: absolute;
@@ -225,7 +241,6 @@
   opacity: 1;
   visibility: visible;
 }
-
 
 .rma-navbar-dropdown::before {
   content: '';
@@ -257,7 +272,6 @@
   font-size: 0.75rem;
   color: rgba(35, 69, 133, 0.6);
 }
-
 
 .rma-navbar-dropdown a {
   display: flex;
@@ -310,7 +324,6 @@
   background: linear-gradient(180deg, #dc2626, #b91c1c);
 }
 
-
 .rma-navbar-dropdown-icon {
   width: 18px;
   height: 18px;
@@ -346,7 +359,6 @@
   visibility: visible;
 }
 
-
 .rma-navbar-button-badge {
   position: absolute;
   top: -2px;
@@ -359,27 +371,37 @@
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 
-
 .rma-navbar-button:focus,
 .rma-navbar-user-button:focus {
   outline: 2px solid rgba(35, 69, 133, 0.3);
   outline-offset: 2px;
 }
 
-
+/* Media queries */
 @media (max-width: 768px) {
+  .rma-navbar {
+    left: 0; /* Navbar pleine largeur sur mobile */
+    height: 64px; /* Plus petite sur mobile */
+  }
+  
+  .rma-navbar.sidebar-collapsed {
+    left: 0;
+  }
+  
   .rma-navbar-container {
     padding: 0 1rem;
   }
   
+  .rma-navbar-content {
+    height: 64px;
+  }
+  
   .rma-navbar-logo img {
-    height: 2rem;
+    height: 2.5rem;
   }
   
   .rma-navbar-actions {
     gap: 0.5rem;
-    padding: 0.5rem;
-    border-radius: 16px;
   }
   
   .rma-navbar-button {
@@ -394,5 +416,46 @@
   .rma-navbar-dropdown {
     width: 12rem;
     right: -1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .rma-navbar {
+    height: 56px; /* Encore plus petite sur très petit écran */
+  }
+  
+  .rma-navbar-content {
+    height: 56px;
+  }
+  
+  .rma-navbar-logo img {
+    height: 2rem;
+  }
+  
+  .rma-navbar-logo-fallback .rma-navbar-logo-circle {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .rma-navbar-logo-fallback .rma-navbar-logo-circle span {
+    font-size: 0.875rem;
+  }
+  
+  .rma-navbar-logo-title {
+    font-size: 0.875rem;
+  }
+  
+  .rma-navbar-logo-subtitle {
+    font-size: 0.625rem;
+  }
+  
+  .rma-navbar-user-button {
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .rma-navbar-user-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
   }
 }

@@ -16,7 +16,7 @@ import ModifierSinistre from './components/ModifierSinistre';
 import CreerSinistre from './components/CreerSinistre';
 
 function AppContent() {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const location = useLocation();
 
   // Déterminer si la sidebar doit être affichée selon la route
@@ -28,10 +28,14 @@ function AppContent() {
     location.pathname.startsWith('/consultation');
 
   return (
-    <div className="min-h-screen bg-white">
-      <RMANavbar isSidebarCollapsed={isSidebarCollapsed} />
+    <div className="min-h-screen bg-gray-50">
+      {/* Navbar - s'affiche seulement si sidebar est visible */}
+      {showSidebar && (
+        <RMANavbar isSidebarCollapsed={isSidebarCollapsed} />
+      )}
 
       <div className="flex">
+        {/* Sidebar */}
         {showSidebar && (
           <RMASidebar
             isCollapsed={isSidebarCollapsed}
@@ -39,8 +43,11 @@ function AppContent() {
           />
         )}
 
+        {/* Contenu principal */}
         <div className={`flex-1 transition-all duration-300 ${
-          showSidebar ? (isSidebarCollapsed ? 'ml-16' : 'ml-64') : ''
+          showSidebar 
+            ? `${isSidebarCollapsed ? 'ml-16' : 'ml-64'} mt-16 p-6`
+            : ''
         }`}>
           <Routes>
             {/* Route d'accueil */}

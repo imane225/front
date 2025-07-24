@@ -1,0 +1,68 @@
+/* App.css - Styles minimaux pour compléter Tailwind */
+
+/* Reset de base */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Corrections pour les largeurs de sidebar et navbar */
+.ml-16 {
+  margin-left: 4rem !important; /* 64px - sidebar collapsed */
+}
+
+.ml-64 {
+  margin-left: 16rem !important; /* 250px - sidebar expanded */
+}
+
+.mt-16 {
+  margin-top: 4rem !important; /* Hauteur de la navbar */
+}
+
+/* Style pour le contenu principal quand il y a navbar + sidebar */
+.main-content-with-navbar {
+  min-height: calc(100vh - 4rem);
+  background-color: #f8fafc;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+  .ml-16,
+  .ml-64 {
+    margin-left: 0 !important;
+  }
+  
+  .mt-16 {
+    margin-top: 3.5rem !important; /* Navbar plus petite sur mobile */
+  }
+}
+
+/* Scrollbar personnalisée pour le contenu */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation smooth pour les transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}

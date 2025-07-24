@@ -1,76 +1,376 @@
+/* Accueil.css - Design Épuré et Moderne */
+
 .accueil-container {
-  padding: 2rem;
-  background: linear-gradient(to bottom, #f8fafc, #eef2f7);
+  padding: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   min-height: 100vh;
-}
-.icon-wrapper {
-  margin-bottom: 1rem;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
 }
 
-.accueil-footer {
-  margin-top: 3rem;
-  padding: 1rem 0;
-  text-align: center;
-  background-color: #f1f5f9;
-  color: #475569;
-  font-size: 0.9rem;
-  border-top: 1px solid #e2e8f0;
-}
-
+/* Header simple et élégant */
 .accueil-header {
   text-align: center;
-  margin-bottom: 2rem;
+  padding: 4rem 2rem 3rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  backdrop-filter: blur(10px);
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+.accueil-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  border-radius: 2px;
 }
 
 .accueil-header h1 {
   color: #1a3660;
-  font-size: 2rem;
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #1a3660 0%, #234585 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .accueil-header p {
-  color: #475569;
-  font-size: 1.1rem;
+  color: #64748b;
+  font-size: 1.25rem;
+  font-weight: 500;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
+/* Grid pour 4 cartes en ligne */
 .accueil-services {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  padding: 0 2rem 4rem;
+  max-width: 1300px;
+  margin: 0 auto;
 }
 
+/* Cartes épurées et modernes */
 .service-card {
-  background-color: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  width: 280px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: transform 0.3s ease;
+  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(241, 245, 249, 0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Accent discret en haut */
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  border-radius: 20px 20px 0 0;
+}
+
+/* Effet de lumière subtil */
+.service-card::after {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.03) 0%, transparent 70%);
+  border-radius: 50%;
+  transition: all 0.4s ease;
 }
 
 .service-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.12),
+    0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
 }
 
+.service-card:hover::after {
+  transform: scale(1.2);
+  opacity: 0.8;
+}
+
+/* Icônes élégantes */
+.icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  box-shadow: 
+    0 12px 30px rgba(245, 158, 11, 0.3),
+    0 6px 12px rgba(245, 158, 11, 0.2);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.service-card:hover .icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 20px 40px rgba(245, 158, 11, 0.4),
+    0 10px 20px rgba(245, 158, 11, 0.3);
+}
+
+/* Titres élégants */
 .service-card h3 {
-  color: #1e3a8a;
+  color: #f59e0b;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+  letter-spacing: -0.01em;
+  position: relative;
 }
 
+/* Descriptions */
 .service-card p {
-  color: #334155;
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 2rem;
+  font-weight: 500;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Boutons épurés et modernes */
 .btn-discover {
-  margin-top: 1rem;
-  background-color: #234585;
+  background: linear-gradient(135deg, #1a3660, #234585);
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 1rem 2rem;
   border: none;
-  border-radius: 10px;
-  transition: background 0.3s ease;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(26, 54, 96, 0.3);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.btn-discover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
 }
 
 .btn-discover:hover {
-  background-color: #1a3660;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(245, 158, 11, 0.4);
+}
+
+.btn-discover:hover::before {
+  left: 100%;
+}
+
+/* Footer simple */
+.accueil-footer {
+  margin-top: 3rem;
+  padding: 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #1a3660, #234585);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Animations fluides */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInScale {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.accueil-header {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.service-card {
+  animation: slideInScale 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.service-card:nth-child(1) { animation-delay: 0.1s; }
+.service-card:nth-child(2) { animation-delay: 0.2s; }
+.service-card:nth-child(3) { animation-delay: 0.3s; }
+.service-card:nth-child(4) { animation-delay: 0.4s; }
+
+.accueil-footer {
+  animation: fadeInUp 1s ease-out;
+}
+
+/* Responsive - maintient 4 colonnes le plus possible */
+@media (max-width: 1200px) {
+  .accueil-services {
+    gap: 1.5rem;
+    max-width: 1200px;
+  }
+  
+  .service-card {
+    padding: 2rem 1.5rem;
+    min-height: 300px;
+  }
+  
+  .icon-wrapper {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .service-card h3 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .accueil-services {
+    gap: 1.25rem;
+    padding: 0 1.5rem 3rem;
+  }
+  
+  .service-card {
+    padding: 1.75rem 1.25rem;
+    min-height: 280px;
+  }
+  
+  .icon-wrapper {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .service-card h3 {
+    font-size: 1.125rem;
+  }
+  
+  .service-card p {
+    font-size: 0.9rem;
+  }
+  
+  .btn-discover {
+    padding: 0.875rem 1.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .accueil-services {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .accueil-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .accueil-header p {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .accueil-services {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 0 1rem 2rem;
+  }
+  
+  .accueil-header {
+    padding: 3rem 1rem 2rem;
+  }
+  
+  .accueil-header h1 {
+    font-size: 2rem;
+  }
+  
+  .service-card {
+    min-height: auto;
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .accueil-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .accueil-header p {
+    font-size: 1rem;
+  }
+  
+  .service-card {
+    padding: 1.5rem;
+  }
+  
+  .icon-wrapper {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* Focus pour accessibilité */
+.service-card:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.5);
+  outline-offset: 4px;
+}
+
+.btn-discover:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.5);
+  outline-offset: 2px;
 }
