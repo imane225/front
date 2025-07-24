@@ -366,16 +366,27 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
                   Précédent
                 </button>
                 
-                {[...Array(totalPages).keys()].map(num => (
-                  <button
-                    key={num + 1}
-                    onClick={() => handlePageChange(num + 1)}
-                    className={`pagination-btn ${currentPage === num + 1 ? 'active' : ''}`}
-                  >
-                    {num + 1}
-                  </button>
-                ))}
-                
+               {(() => {
+                  const maxButtons = 5;
+                  const startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                  const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                  const pages = [];
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i);
+                  }
+
+                  return pages.map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handlePageChange(num)}
+                      className={`pagination-btn ${currentPage === num ? 'active' : ''}`}
+                    >
+                      {num}
+                    </button>
+                  ));
+                })()}
+
                 <button 
                   onClick={() => handlePageChange(currentPage + 1)} 
                   disabled={currentPage === totalPages} 
