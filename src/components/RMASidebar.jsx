@@ -1,48 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Menu, 
-  Home, 
-  Users, 
-  FileText, 
+import {
+  Menu,
+  Home,
+  Users,
+  FileText,
   Search,
   ChevronDown,
   ChevronRight,
-  Layers, // Pour l'icône des lots
+  Layers,
   Plus
 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom'; 
-import './RMASidebar.css';
+import { useNavigate, useLocation } from 'react-router-dom';
+import './RMASidebar.css'; // Importe le fichier CSS
+
+const LOCAL_STORAGE_KEY = 'rma-sidebar-collapsed';
 
 const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
-  const [isCollapsed, setIsCollapsed] = useState(externalIsCollapsed || false);
+  // Important : useState DOIT être à l’intérieur du composant
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    // Si localStorage présent, convertit string en booléen
+    if (stored !== null) return stored === 'true';
+    // Sinon, sidebar fermée par défaut
+    return true;
+  });
+
   const [activeItem, setActiveItem] = useState('search-sinistre');
   const [expandedMenus, setExpandedMenus] = useState(['sinistre']);
-
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Synchronise avec la prop externe si fournie
   useEffect(() => {
     if (typeof externalIsCollapsed === 'boolean') {
       setIsCollapsed(externalIsCollapsed);
+      localStorage.setItem(LOCAL_STORAGE_KEY, externalIsCollapsed);
     }
   }, [externalIsCollapsed]);
 
+  // Met à jour l'item actif et menus ouverts selon URL
   useEffect(() => {
     const pathname = location.pathname;
+
     if (pathname.includes('/consultation/sinistres/creer')) {
       setActiveItem('creer-sinistre');
-      setExpandedMenus(prev => prev.includes('sinistre') ? prev : [...prev, 'sinistre']);
+      if (!expandedMenus.includes('sinistre')) {
+        setExpandedMenus(prev => [...prev, 'sinistre']);
+      }
     } else if (pathname.includes('/consultation/sinistres')) {
       setActiveItem('search-sinistre');
-      setExpandedMenus(prev => prev.includes('sinistre') ? prev : [...prev, 'sinistre']);
+      if (!expandedMenus.includes('sinistre')) {
+        setExpandedMenus(prev => [...prev, 'sinistre']);
+      }
     } else if (pathname.includes('/lots/creation')) {
       setActiveItem('create-lot');
-      setExpandedMenus(prev => prev.includes('lot') ? prev : [...prev, 'lot']);
+      if (!expandedMenus.includes('lot')) {
+        setExpandedMenus(prev => [...prev, 'lot']);
+      }
     } else if (pathname.includes('/lots')) {
       setActiveItem('search-lot');
-      setExpandedMenus(prev => prev.includes('lot') ? prev : [...prev, 'lot']);
+      if (!expandedMenus.includes('lot')) {
+        setExpandedMenus(prev => [...prev, 'lot']);
+      }
     }
-  }, [location.pathname]);
+  }, [location.pathname, expandedMenus]);
 
   const menuItems = [
     {
@@ -64,7 +85,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
           href: '/consultation/sinistres'
         },
         {
-          id: 'creer-sinistre', 
+          id: 'creer-sinistre',
           label: 'Créer sinistre',
           icon: Plus,
           href: '/consultation/sinistres/creer'
@@ -86,7 +107,7 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
         {
           id: 'create-lot',
           label: 'Créer lot',
-          icon: FileText, 
+          icon: FileText,
           href: '/lots/creation'
         }
       ]
@@ -102,32 +123,29 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
   const toggleSidebar = () => {
     const newCollapsed = !isCollapsed;
     setIsCollapsed(newCollapsed);
+    localStorage.setItem(LOCAL_STORAGE_KEY, newCollapsed);
     if (onToggle) onToggle(newCollapsed);
   };
 
   const handleItemClick = (itemId, href) => {
-    if (menuItems.find(item => item.id === itemId && item.isExpandable)) {
-      setExpandedMenus(prev => 
-        prev.includes(itemId) 
-          ? prev.filter(id => id !== itemId)
-          : [...prev, itemId]
+    const menu = menuItems.find(item => item.id === itemId);
+
+    if (menu?.isExpandable) {
+      setExpandedMenus(prev =>
+        prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
       );
     } else {
       setActiveItem(itemId);
-      if (href) {
-        navigate(href);
-      }
+      if (href) navigate(href);
     }
   };
 
   const handleSubItemClick = (subItemId, href) => {
     setActiveItem(subItemId);
-    if (href) {
-      navigate(href);
-    }
+    if (href) navigate(href);
   };
 
-  const isMenuExpanded = (menuId) => expandedMenus.includes(menuId);
+  const isMenuExpanded = menuId => expandedMenus.includes(menuId);
 
   return (
     <div className={`rma-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -139,16 +157,16 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
 
       <nav className="rma-sidebar-nav">
         <ul className="rma-sidebar-menu">
-          {menuItems.map((item) => {
+          {menuItems.map(item => {
             const IconComponent = item.icon;
             const isExpanded = isMenuExpanded(item.id);
-            
+
             return (
               <li key={item.id} className="rma-sidebar-item">
                 <a
                   href={item.href || '#'}
                   className={`rma-sidebar-link ${activeItem === item.id ? 'active' : ''}`}
-                  onClick={(e) => {
+                  onClick={e => {
                     e.preventDefault();
                     handleItemClick(item.id, item.href);
                   }}
@@ -169,14 +187,14 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
 
                 {item.subItems && isExpanded && !isCollapsed && (
                   <ul className="rma-sidebar-submenu">
-                    {item.subItems.map((subItem) => {
+                    {item.subItems.map(subItem => {
                       const SubIconComponent = subItem.icon;
                       return (
                         <li key={subItem.id} className="rma-sidebar-subitem">
                           <a
                             href={subItem.href}
                             className={`rma-sidebar-sublink ${activeItem === subItem.id ? 'active' : ''}`}
-                            onClick={(e) => {
+                            onClick={e => {
                               e.preventDefault();
                               handleSubItemClick(subItem.id, subItem.href);
                             }}

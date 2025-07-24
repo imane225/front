@@ -6,6 +6,7 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   FileText,
   Calendar
 } from 'lucide-react';
@@ -135,10 +136,11 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
         {error && <div className="alert alert-error">{error}</div>}
         {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
-        <div className="form-grid form-grid-3">
+        {/* ✅ CORRECTION : Utilisation de form-grid-2 pour alignement sur même ligne */}
+        <div className="form-content">
           {activeTab === 'numeroLot' && (
-            <>
-              <div className="form-group span-2">
+            <div className="form-grid form-grid-2">
+              <div className="form-group">
                 <label className="form-label required">Numéro de Lot</label>
                 <input
                   type="text"
@@ -150,18 +152,21 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
               </div>
               <div className="form-group">
                 <label className="form-label">Type de correspondance</label>
-                <select
-                  className="form-input"
-                  value={searchParams.typeRecherche}
-                  onChange={(e) => setSearchParams({ ...searchParams, typeRecherche: e.target.value })}
-                >
-                  <option value="EXACTE">EXACTE</option>
-                  <option value="CONTIENT">CONTIENT</option>
-                  <option value="COMMENCE_PAR">COMMENCE PAR</option>
-                  <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
-                </select>
+                <div className="select-wrapper">
+                  <select
+                    className="form-select"
+                    value={searchParams.typeRecherche}
+                    onChange={(e) => setSearchParams({ ...searchParams, typeRecherche: e.target.value })}
+                  >
+                    <option value="EXACTE">EXACTE</option>
+                    <option value="CONTIENT">CONTIENT</option>
+                    <option value="COMMENCE_PAR">COMMENCE PAR</option>
+                    <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
+                  </select>
+                  <ChevronDown className="select-icon" />
+                </div>
               </div>
-            </>
+            </div>
           )}
             {activeTab === 'by-gestionnaire' && (
               <div className="form-group span-2">
@@ -177,13 +182,14 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
             )}
 
           {activeTab === 'by-police' && (
-            <>
+            <div className="form-grid form-grid-3">
               <div className="form-group">
                 <label className="form-label required">Numéro de Police</label>
                 <input
                   type="text"
                   value={searchParams.numeroPolice}
                   onChange={(e) => setSearchParams({ ...searchParams, numeroPolice: e.target.value })}
+                  placeholder="Saisir numéro de police"
                   className="form-input"
                 />
               </div>
@@ -205,17 +211,18 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
                   className="form-input"
                 />
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === 'combinee' && (
-            <>
+            <div className="form-grid form-grid-2">
               <div className="form-group">
                 <label className="form-label">Numéro de Lot</label>
                 <input
                   type="text"
                   value={searchParams.numeroLot}
                   onChange={(e) => setSearchParams({ ...searchParams, numeroLot: e.target.value })}
+                  placeholder="Saisir numéro de lot"
                   className="form-input"
                 />
               </div>
@@ -225,6 +232,7 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
                   type="text"
                   value={searchParams.numeroPolice}
                   onChange={(e) => setSearchParams({ ...searchParams, numeroPolice: e.target.value })}
+                  placeholder="Saisir numéro de police"
                   className="form-input"
                 />
               </div>
@@ -248,18 +256,21 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
               </div>
               <div className="form-group span-2">
                 <label className="form-label">Type de Recherche</label>
-                <select
-                  className="form-input"
-                  value={searchParams.typeRecherche}
-                  onChange={(e) => setSearchParams({ ...searchParams, typeRecherche: e.target.value })}
-                >
-                  <option value="EXACTE">EXACTE</option>
-                  <option value="CONTIENT">CONTIENT</option>
-                  <option value="COMMENCE_PAR">COMMENCE PAR</option>
-                  <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
-                </select>
+                <div className="select-wrapper">
+                  <select
+                    className="form-select"
+                    value={searchParams.typeRecherche}
+                    onChange={(e) => setSearchParams({ ...searchParams, typeRecherche: e.target.value })}
+                  >
+                    <option value="EXACTE">EXACTE</option>
+                    <option value="CONTIENT">CONTIENT</option>
+                    <option value="COMMENCE_PAR">COMMENCE PAR</option>
+                    <option value="SE_TERMINE_PAR">SE TERMINE PAR</option>
+                  </select>
+                  <ChevronDown className="select-icon" />
+                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
 
@@ -277,6 +288,17 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
 
       {results.length > 0 && (
         <div className="results-container">
+          <div className="results-header">
+            <h4 className="results-title">
+              Résultats de la recherche ({totalResults} trouvé{totalResults > 1 ? 's' : ''})
+            </h4>
+            <div className="results-info">
+              <span className="results-timestamp">
+                Recherche effectuée le {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR')}
+              </span>
+            </div>
+          </div>
+          
           <div className="table-wrapper">
             <table className="results-table">
               <thead>
@@ -291,12 +313,32 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
               <tbody>
                 {getCurrentPageResults().map((lot, index) => (
                   <tr key={index}>
-                    <td>{lot.numeroLot}</td>
-                    <td>{lot.numeroPolice}</td>
-                    <td>{lot.raisonSocialeClient || '—'}</td>
-                    <td>{lot.dateReception || '—'}</td>
                     <td>
-                      <button className="btn btn-small btn-outline" onClick={() => navigate(`/lots/details/${lot.id}`)}>
+                      <div className="cell-primary">
+                        {lot.numeroLot || 'N/A'}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="cell-primary">
+                        {lot.numeroPolice || 'N/A'}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="cell-primary">
+                        {lot.raisonSocialeClient || '—'}
+                      </div>
+                    </td>
+                    <td>
+                      <time dateTime={lot.dateReception}>
+                        {lot.dateReception || '—'}
+                      </time>
+                    </td>
+                    <td>
+                      <button 
+                        className="btn btn-small btn-outline" 
+                        onClick={() => navigate(`/lots/details/${lot.id}`)}
+                        disabled={!lot.id}
+                      >
                         <Eye className="btn-icon" /> Détails
                       </button>
                     </td>
@@ -311,12 +353,19 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
               <div className="pagination-info">
                 Affichage de <span className="pagination-highlight">{((currentPage - 1) * 10) + 1}</span> à{' '}
                 <span className="pagination-highlight">{Math.min(currentPage * 10, totalResults)}</span> sur{' '}
-                <span className="pagination-highlight">{totalResults}</span> résultats
+                <span className="pagination-highlight">{totalResults}</span> résultat{totalResults > 1 ? 's' : ''}
               </div>
+              
               <div className="pagination-controls">
-                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="pagination-btn">
+                <button 
+                  onClick={() => handlePageChange(currentPage - 1)} 
+                  disabled={currentPage === 1} 
+                  className="pagination-btn"
+                >
                   <ChevronLeft className="pagination-icon" />
+                  Précédent
                 </button>
+                
                 {[...Array(totalPages).keys()].map(num => (
                   <button
                     key={num + 1}
@@ -326,7 +375,13 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
                     {num + 1}
                   </button>
                 ))}
-                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-btn">
+                
+                <button 
+                  onClick={() => handlePageChange(currentPage + 1)} 
+                  disabled={currentPage === totalPages} 
+                  className="pagination-btn"
+                >
+                  Suivant
                   <ChevronRight className="pagination-icon" />
                 </button>
               </div>
@@ -343,16 +398,29 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
           <div className="empty-state-content">
             <h3>Aucun résultat trouvé</h3>
             <p>Effectuez une recherche pour consulter les lots selon vos critères.</p>
+            <div className="empty-state-suggestions">
+              <h4>Suggestions :</h4>
+              <ul>
+                <li>Vérifiez l'orthographe des termes de recherche</li>
+                <li>Essayez une recherche moins spécifique</li>
+                <li>Utilisez le type de correspondance "CONTIENT" pour élargir la recherche</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}
 
       {loading && (
         <div className="loading-state">
-          <RefreshCw className="loading-spinner" />
+          <div className="loading-spinner-container">
+            <RefreshCw className="loading-spinner" />
+          </div>
           <div className="loading-content">
             <h3>Recherche en cours...</h3>
             <p>Veuillez patienter pendant que nous recherchons les lots.</p>
+            <div className="loading-progress">
+              <div className="loading-bar"></div>
+            </div>
           </div>
         </div>
       )}

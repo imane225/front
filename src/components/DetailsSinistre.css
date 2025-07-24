@@ -2,11 +2,38 @@
   padding: 24px;
   background-color: #f8fafc;
   min-height: 100vh;
-  transition: margin-left 0.3s ease;
+  transition: all 0.3s ease;
+  
+  /* Ajustements pour éviter la superposition */
+  margin-left: 250px; /* Largeur sidebar normale */
+  padding-top: 104px; /* 80px navbar + 24px espacement */
+  box-sizing: border-box;
 }
 
 .details-container.sidebar-collapsed {
-  margin-left: 80px;
+  margin-left: 64px; /* Largeur sidebar collapsed */
+}
+
+/* Media queries pour la responsivité */
+@media (max-width: 768px) {
+  .details-container {
+    margin-left: 0;
+    padding-top: 88px; /* 64px navbar mobile + 24px espacement */
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .details-container.sidebar-collapsed {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .details-container {
+    padding-top: 80px; /* 56px navbar très petit écran + 24px espacement */
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 .breadcrumb {
@@ -68,9 +95,12 @@
   gap: 8px;
 }
 
+/* Suppression du background orange des icônes */
 .status-icon {
   width: 20px;
   height: 20px;
+  background: none !important;
+  color: inherit;
 }
 
 .status-badge {
@@ -142,6 +172,7 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .details-grid {
@@ -190,10 +221,12 @@
   color: #111827;
 }
 
+/* Suppression du background orange des icônes */
 .card-icon {
   width: 20px;
   height: 20px;
   color: #3b82f6;
+  background: none !important;
 }
 
 .section-badge {
@@ -211,11 +244,13 @@
   align-items: center;
 }
 
+/* Suppression du background orange des icônes */
 .expand-icon {
   width: 16px;
   height: 16px;
   color: #6b7280;
   transition: transform 0.2s;
+  background: none !important;
 }
 
 .card-content {
@@ -307,9 +342,11 @@
   text-decoration: none;
 }
 
+/* Suppression du background orange des icônes de boutons */
 .btn-icon {
   width: 16px;
   height: 16px;
+  background: none !important;
 }
 
 .btn-primary {
@@ -341,6 +378,38 @@
   border-color: #9ca3af;
 }
 
+/* Boutons de documents */
+.document-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: white;
+}
+
+.document-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Suppression du background orange des icônes de loading */
+.loading-icon {
+  animation: spin 1s linear infinite;
+  background: none !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .loading-state,
 .error-state,
 .empty-state {
@@ -366,11 +435,6 @@
   margin-bottom: 16px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 .error-icon,
 .loading-content h3,
 .error-content h3,
@@ -393,8 +457,15 @@
   color: #ef4444;
   width: 48px;
   height: 48px;
+  background: none !important;
 }
 
+/* Global fix pour toutes les icônes Lucide React */
+svg {
+  background: none !important;
+}
+
+/* Media queries pour la responsivité mobile */
 @media (max-width: 1024px) {
   .details-grid {
     grid-template-columns: 1fr;
@@ -412,6 +483,7 @@
 @media (max-width: 768px) {
   .details-container {
     padding: 16px;
+    padding-top: 88px; /* Ajusté pour mobile */
   }
   
   .details-header {
@@ -437,8 +509,15 @@
     justify-content: stretch;
   }
   
-  .header-actions .btn {
+  .header-actions .btn,
+  .header-actions .document-btn {
     flex: 1;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .details-container {
+    padding-top: 80px; /* Ajusté pour très petit écran */
   }
 }
