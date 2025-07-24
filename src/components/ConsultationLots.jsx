@@ -22,6 +22,7 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
     numeroPolice: '',
     dateDebut: '',
     dateFin: '',
+    gestionnaire: '', // <== ajouté
     typeRecherche: 'EXACTE'
   });
   const [results, setResults] = useState([]);
@@ -50,6 +51,9 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
           searchParams.dateDebut,
           searchParams.dateFin
         );
+        } else if (activeTab === 'by-gestionnaire') {
+        response = await lotService.rechercherParGestionnaire(
+        searchParams.gestionnaire);
       } else if (activeTab === 'combinee') {
         response = await lotService.rechercherCombinee({
           numeroLot: searchParams.numeroLot || null,
@@ -115,6 +119,10 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
           <button className={`tab-button ${activeTab === 'numeroLot' ? 'active' : ''}`} onClick={() => setActiveTab('numeroLot')}>
             <Search className="tab-icon" /> Par Numéro
           </button>
+          <button className={`tab-button ${activeTab === 'by-gestionnaire' ? 'active' : ''}`} onClick={() => setActiveTab('by-gestionnaire')}>
+            <Search className="tab-icon" /> Par Gestionnaire
+          </button>
+
           <button className={`tab-button ${activeTab === 'by-police' ? 'active' : ''}`} onClick={() => setActiveTab('by-police')}>
             <Calendar className="tab-icon" /> Par Police + Période
           </button>
@@ -160,6 +168,18 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
               </div>
             </div>
           )}
+            {activeTab === 'by-gestionnaire' && (
+              <div className="form-group span-2">
+                <label className="form-label required">Nom du Gestionnaire</label>
+                <input
+                  type="text"
+                  value={searchParams.gestionnaire || ''}
+                  onChange={(e) => setSearchParams({ ...searchParams, gestionnaire: e.target.value })}
+                  placeholder="Saisir le nom du gestionnaire"
+                  className="form-input"
+                />
+              </div>
+            )}
 
           {activeTab === 'by-police' && (
             <div className="form-grid form-grid-3">
@@ -346,16 +366,27 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
                   Précédent
                 </button>
                 
-                {[...Array(totalPages).keys()].map(num => (
-                  <button
-                    key={num + 1}
-                    onClick={() => handlePageChange(num + 1)}
-                    className={`pagination-btn ${currentPage === num + 1 ? 'active' : ''}`}
-                  >
-                    {num + 1}
-                  </button>
-                ))}
-                
+               {(() => {
+                  const maxButtons = 5;
+                  const startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                  const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                  const pages = [];
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i);
+                  }
+
+                  return pages.map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handlePageChange(num)}
+                      className={`pagination-btn ${currentPage === num ? 'active' : ''}`}
+                    >
+                      {num}
+                    </button>
+                  ));
+                })()}
+
                 <button 
                   onClick={() => handlePageChange(currentPage + 1)} 
                   disabled={currentPage === totalPages} 
