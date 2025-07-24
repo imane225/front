@@ -30,6 +30,8 @@ const ModifierSinistre = ({ sidebarCollapsed = false }) => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [sinistreOriginal, setSinistreOriginal] = useState(null);
+  const [typesDeclaration, setTypesDeclaration] = useState([]);
+  const [loadingTypes, setLoadingTypes] = useState(true);
   
   const [formData, setFormData] = useState({
     codeDecl: '',
@@ -46,6 +48,23 @@ const ModifierSinistre = ({ sidebarCollapsed = false }) => {
   });
 
   const [validation, setValidation] = useState({});
+
+  // Chargement des types de déclaration
+  useEffect(() => {
+    const loadTypesDeclaration = async () => {
+      try {
+        setLoadingTypes(true);
+        const response = await SinistreService.getTypesDeclaration();
+        setTypesDeclaration(response.data);
+      } catch (error) {
+        console.error('Erreur chargement types:', error);
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    loadTypesDeclaration();
+  }, []);
 
   const getFieldPermissions = (etatSinistre) => {
     const etat = etatSinistre?.toUpperCase();
@@ -656,18 +675,22 @@ const ModifierSinistre = ({ sidebarCollapsed = false }) => {
                     <AlertTriangle className="warning-icon" title="Attention: modification limitée pour cet état" />
                   )}
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.codeDecl}
                   onChange={(e) => handleInputChange('codeDecl', e.target.value)}
                   className={`form-input ${validation.codeDecl ? 'error' : ''} ${
                     isFieldDisabled('codeDecl') ? 'disabled' : ''
                   } ${hasFieldWarning('codeDecl') ? 'warning' : ''}`}
-                  placeholder="Ex: 01, 02, 03..."
-                  maxLength="10"
-                  disabled={isFieldDisabled('codeDecl')}
+                  disabled={isFieldDisabled('codeDecl') || loadingTypes}
                   title={isFieldDisabled('codeDecl') ? `Champ non modifiable pour l'état "${formData.etatSinistreLibelle}"` : ''}
-                />
+                >
+                  <option value="">-- Sélectionner --</option>
+                  {typesDeclaration.map(type => (
+                    <option key={type.code} value={type.code}>
+                      {type.code} - {type.libelle}
+                    </option>
+                  ))}
+                </select>
                 {validation.codeDecl && (
                   <span className="error-message">{validation.codeDecl}</span>
                 )}
@@ -830,6 +853,15 @@ const ModifierSinistre = ({ sidebarCollapsed = false }) => {
               <div className="readonly-item">
                 <label>État Sinistre</label>
                 <span>{formData.etatSinistreLibelle || 'N/A'}</span>
+              </div>
+              <div className="readonly-item">
+                <label>Type Déclaration</label>
+                <span>
+                  {formData.codeDecl ? 
+                    `${formData.codeDecl} - ${typesDeclaration.find(t => t.code === formData.codeDecl)?.libelle || formData.codeDecl}` 
+                    : 'N/A'
+                  }
+                </span>
               </div>
             </div>
           </div>

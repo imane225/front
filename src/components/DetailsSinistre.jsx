@@ -46,13 +46,43 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
   });
   const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
 
-  const DOCUMENT_BUTTONS = {
-    "3": { label: "Lettre de rejet", icon: FileX, color: "bg-red-500", type: "REJET" },
-    "4": { label: "Décompte", icon: FileCheck, color: "bg-green-500", type: "DECOMPTE" },
-    "6": { label: "Lettre complément", icon: FileQuestion, color: "bg-orange-500", type: "COMPLEMENT" },
-    "8": { label: "Convocation CV", icon: Stethoscope, color: "bg-purple-500", type: "CONTRE_VISITE" },
-    "11": { label: "Lettre d'accord", icon: CheckCircle, color: "bg-blue-500", type: "ACCORD" }
-  };
+ const DOCUMENT_BUTTONS = {
+  "3": { 
+    label: "Lettre de rejet", 
+    icon: FileX, 
+    color: "bg-[#D32F2F]", // Rouge vif
+    hoverColor: "bg-[#B71C1C]", // Rouge plus foncé au survol
+    type: "REJET" 
+  },
+  "4": { 
+    label: "Décompte", 
+    icon: FileCheck, 
+    color: "bg-[#388E3C]", // Vert foncé
+    hoverColor: "bg-[#2E7D32]", 
+    type: "DECOMPTE" 
+  },
+  "6": { 
+    label: "Lettre complement", 
+    icon: FileQuestion, 
+    color: "bg-[#FB8C00]", // Orange vif
+    hoverColor: "bg-[#F57C00]", 
+    type: "COMPLEMENT" 
+  },
+  "8": { 
+    label: "Convocation CV", 
+    icon: Stethoscope, 
+    color: "bg-[#7B1FA2]", // Violet
+    hoverColor: "bg-[#6A1B9A]", 
+    type: "CONTRE_VISITE" 
+  },
+  "11": { 
+    label: "Lettre d'accord", 
+    icon: CheckCircle, 
+    color: "bg-[#1976D2]", // Bleu
+    hoverColor: "bg-[#1565C0]", 
+    type: "ACCORD" 
+  }
+};
 
   useEffect(() => {
     const loadSinistreDetails = async () => {
@@ -384,7 +414,7 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
             <InfoItem label="N° SINISTRE RÉDUIT" value={sinistreDetails.numSinistreReduit} />
             <InfoItem label="N° POLICE" value={sinistreDetails.numPolice} important />
             <InfoItem label="N° FILIALE" value={sinistreDetails.numFiliale} />
-            <InfoItem label="N° COMPLÉMENT" value={sinistreDetails.numCompl} />
+            <InfoItem label="N° complement" value={sinistreDetails.numCompl} />
             <InfoItem label="N° ORDRE" value={sinistreDetails.numOrdre} />
             <InfoItem label="CODE DÉCLARATION" value={sinistreDetails.codeDecl} />
             <InfoItem label="TYPE DÉCLARATION" value={sinistreDetails.typeDeclarationLibelle} />

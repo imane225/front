@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   User, 
@@ -24,7 +24,8 @@ import './CreerSinistre.css';
 
 const CreerSinistre = ({ sidebarCollapsed = false }) => {
   const navigate = useNavigate();
-  
+  const [typesDeclaration, setTypesDeclaration] = useState([]);
+  const [loadingTypes, setLoadingTypes] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -61,6 +62,24 @@ const CreerSinistre = ({ sidebarCollapsed = false }) => {
   });
 
   const [validationErrors, setValidationErrors] = useState({});
+
+  // Chargement des types de déclaration
+  useEffect(() => {
+    const loadTypesDeclaration = async () => {
+      try {
+        setLoadingTypes(true);
+        const response = await SinistreService.getTypesDeclaration();
+        setTypesDeclaration(response.data);
+      } catch (error) {
+        console.error('Erreur chargement types:', error);
+        // Les types de fallback sont déjà gérés dans le service
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    loadTypesDeclaration();
+  }, []);
 
   const handleBack = () => {
     navigate('/consultation/sinistres');
@@ -354,6 +373,14 @@ const CreerSinistre = ({ sidebarCollapsed = false }) => {
             <span className="summary-label">Statut</span>
             <span className="summary-value">En cours de création</span>
           </div>
+          {formData.codeDecl && (
+            <div className="summary-item">
+              <span className="summary-label">Type déclaration</span>
+              <span className="summary-value">
+                {typesDeclaration.find(t => t.code === formData.codeDecl)?.libelle || formData.codeDecl}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="header-actions">
@@ -444,24 +471,30 @@ const CreerSinistre = ({ sidebarCollapsed = false }) => {
                 maxLength={20}
               />
               
-              <SelectField
-                label="Type de Déclaration"
-                value={formData.codeDecl}
-                onChange={(value) => handleInputChange('codeDecl', value)}
-                error={validationErrors.codeDecl}
-                required
-                options={[
-                  { value: '24', label: 'Consultation (24)' },
-                  { value: '30', label: 'Hospitalisation (30)' },
-                  { value: '38', label: 'Pharmacie (38)' },
-                  { value: 'CON', label: 'Consultation (CON)' },
-                  { value: 'HOS', label: 'Hospitalisation (HOS)' },
-                  { value: 'PHA', label: 'Pharmacie (PHA)' },
-                  { value: '1', label: 'Type 1' },
-                  { value: '2', label: 'Type 2' },
-                  { value: '3', label: 'Type 3' }
-                ]}
-              />
+              <div className="input-field">
+                <label className="input-label required">
+                  Type de Déclaration
+                  <span className="required-star">*</span>
+                </label>
+                <select
+                  value={formData.codeDecl}
+                  onChange={(e) => handleInputChange('codeDecl', e.target.value)}
+                  className={`input-control ${validationErrors.codeDecl ? 'error' : ''}`}
+                  disabled={loadingTypes}
+                >
+                  <option value="">
+                    {loadingTypes ? '-- Chargement des types...' : '-- Sélectionner --'}
+                  </option>
+                  {typesDeclaration.map(type => (
+                    <option key={type.code} value={type.code}>
+                      {type.code} - {type.libelle}
+                    </option>
+                  ))}
+                </select>
+                {validationErrors.codeDecl && (
+                  <span className="error-message">{validationErrors.codeDecl}</span>
+                )}
+              </div>
               
               <InputField
                 label="Date de Survenance"
@@ -535,10 +568,10 @@ const CreerSinistre = ({ sidebarCollapsed = false }) => {
               />
               
               <InputField
-                label="Numéro Complément"
+                label="Numéro complement"
                 value={formData.numCompl}
                 onChange={(value) => handleInputChange('numCompl', value)}
-                placeholder="Complément"
+                placeholder="complement"
                 maxLength={10}
               />
               

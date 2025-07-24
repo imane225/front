@@ -21,6 +21,8 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   
   // État utilisateur pour affichage des informations
   const [userInfo, setUserInfo] = useState(null);
+  const [etatsSinistre, setEtatsSinistre] = useState([]);
+  const [loadingEtats, setLoadingEtats] = useState(true);
   
   useEffect(() => {
     // ✅ Plus besoin de hardcoder le token ici, il est centralisé
@@ -41,6 +43,25 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       console.warn('⚠️ Aucun token disponible pour l\'authentification');
     }
   }, []); 
+
+  // Chargement des états de sinistre
+  useEffect(() => {
+    const loadEtatsSinistre = async () => {
+      try {
+        setLoadingEtats(true);
+        const response = await SinistreService.getEtatsSinistre();
+        setEtatsSinistre(response.data);
+        console.log('✅ États de sinistre chargés:', response.data);
+      } catch (error) {
+        console.error('Erreur chargement états:', error);
+        // Les états de fallback sont déjà gérés dans le service
+      } finally {
+        setLoadingEtats(false);
+      }
+    };
+
+    loadEtatsSinistre();
+  }, []);
 
   const [activeTab, setActiveTab] = useState('recherche-sinistre');
   const [loading, setLoading] = useState(false);
@@ -503,21 +524,39 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
         );
 
       case 'etat-sinistre':
-        return (
-          <div className="form-grid form-grid-2">
-            <div className="form-group">
-              <label className="form-label required">
-                État du sinistre
-              </label>
-              <input
-                type="text"
-                value={searchParams.etatSinistre}
-                onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
-                placeholder="Ex: Ouvert, Clôturé, En cours..."
-                className="form-input"
-                maxLength={50}
-              />
-            </div>
+  return (
+    <div className="form-grid form-grid-2">
+      <div className="form-group">
+        <label className="form-label required">
+          État du sinistre
+        </label>
+        <div className="select-wrapper">
+          <select
+            value={searchParams.etatSinistre}
+            onChange={(e) => {
+              // Convertir l'affichage avec accent en valeur sans accent
+              const value = e.target.value === "En attente de complement d\'information" 
+                ? "En attente de complement d\'information" 
+                : e.target.value;
+              setSearchParams({...searchParams, etatSinistre: value});
+            }}
+            className="form-select"
+            disabled={loadingEtats}
+          >
+            <option value="">-- Sélectionner un état --</option>
+            {etatsSinistre.map(etat => (
+              <option key={etat.code} value={etat.libelle}>
+                {/* Afficher avec accent mais stocker sans accent */}
+                {etat.libelle.replace('complement', 'complement')}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="select-icon" />
+        </div>
+        {loadingEtats && (
+          <span className="help-text">Chargement des états...</span>
+        )}
+      </div>
             <div className="form-group">
               <label className="form-label">
                 Type de correspondance
@@ -700,14 +739,22 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 <label className="form-label">
                   État du sinistre
                 </label>
-                <input
-                  type="text"
-                  value={searchParams.etatSinistre}
-                  onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
-                  placeholder="État"
-                  className="form-input"
-                  maxLength={50}
-                />
+                <div className="select-wrapper">
+                  <select
+                    value={searchParams.etatSinistre}
+                    onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
+                    className="form-select"
+                    disabled={loadingEtats}
+                  >
+                    <option value="">-- Sélectionner un état --</option>
+                    {etatsSinistre.map(etat => (
+                      <option key={etat.code} value={etat.libelle}>
+                        {etat.libelle}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="select-icon" />
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">

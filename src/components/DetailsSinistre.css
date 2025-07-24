@@ -94,7 +94,40 @@
   align-items: center;
   gap: 8px;
 }
+/* Boutons de documents */
+.document-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: white;
+}
 
+.document-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Couleurs spécifiques */
+.document-btn.bg-\[\#D32F2F\] { background-color: #D32F2F; }
+.document-btn.bg-\[\#388E3C\] { background-color: #388E3C; }
+.document-btn.bg-\[\#FB8C00\] { background-color: #FB8C00; }
+.document-btn.bg-\[\#7B1FA2\] { background-color: #7B1FA2; }
+.document-btn.bg-\[\#1976D2\] { background-color: #1976D2; }
+
+/* Couleurs de survol */
+.document-btn.bg-\[\#D32F2F\]:hover { background-color: #B71C1C; }
+.document-btn.bg-\[\#388E3C\]:hover { background-color: #2E7D32; }
+.document-btn.bg-\[\#FB8C00\]:hover { background-color: #F57C00; }
+.document-btn.bg-\[\#7B1FA2\]:hover { background-color: #6A1B9A; }
+.document-btn.bg-\[\#1976D2\]:hover { background-color: #1565C0; }
 /* Suppression du background orange des icônes */
 .status-icon {
   width: 20px;

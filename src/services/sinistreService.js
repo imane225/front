@@ -21,7 +21,34 @@ class SinistreService {
     setAuthToken(token); // ✅ Fonction centralisée
     console.log('🔑 Token défini:', token ? 'Oui' : 'Non');
   }
-
+async getEtatsSinistre() {
+  try {
+    console.log('📊 Récupération des états de sinistre...');
+    
+    const url = `${API_BASE_URL}/etats-sinistre`;
+    const response = await this.apiCall(url);
+    
+    console.log('✅ États de sinistre récupérés:', response.data);
+    
+    return response;
+  } catch (error) {
+    console.error('❌ Erreur récupération états de sinistre:', error);
+    
+    // Fallback en cas d'erreur - mêmes données que le backend
+    console.log('🔄 Utilisation des états de fallback');
+    return {
+      data: [
+        { code: '3', libelle: 'Rejeté' },
+        { code: '4', libelle: 'Réglé' },
+        { code: '6', libelle: 'En attente de complement d\'information' },
+        { code: '8', libelle: 'En attente de contre visite' },
+        { code: '11', libelle: 'En attente facture définitive' }
+      ],
+      message: 'États de sinistre (mode hors ligne)',
+      success: true
+    };
+  }
+}
   /**
    * Récupère un token depuis Keycloak
    * ✅ Mise à jour pour utiliser la configuration centralisée
@@ -617,7 +644,40 @@ class SinistreService {
     
     throw new Error('Impossible de récupérer les détails du sinistre');
   }
-
+/**
+ * Récupère tous les types de déclaration disponibles
+ * @returns {Promise<object>} Liste des types de déclaration avec codes et libellés
+ */
+async getTypesDeclaration() {
+  try {
+    console.log('📋 Récupération des types de déclaration...');
+    
+    const url = `${API_BASE_URL}/types-declaration`;
+    const response = await this.apiCall(url);
+    
+    console.log('✅ Types de déclaration récupérés:', response.data);
+    
+    return response;
+  } catch (error) {
+    console.error('❌ Erreur récupération types de déclaration:', error);
+    
+    // Fallback en cas d'erreur - mêmes données que le backend
+    console.log('🔄 Utilisation des types de fallback');
+    return {
+      data: [
+        { code: '21', libelle: 'Déclaration de maladie' },
+        { code: '22', libelle: 'Déclaration de maternité' },
+        { code: '23', libelle: 'Déclaration d\'optique' },
+        { code: '29', libelle: 'Déclaration clinique hors convention' },
+        { code: '30', libelle: 'PEC Prestataire Santé' },
+        { code: '36', libelle: 'Déclaration Soins Dentaires' },
+        { code: '38', libelle: 'Devis SPD' }
+      ],
+      message: 'Types de déclaration (mode hors ligne)',
+      success: true
+    };
+  }
+}
   async genererDocumentSinistre(numPolice, numFiliale, numAffiliation, numSinistre) {
     // ✅ Validation de tous les paramètres
     const validatedParams = {
