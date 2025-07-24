@@ -1,7 +1,7 @@
 // 📁 src/services/sinistreService.js
 import { getAuthToken, setAuthToken, isTokenValid, clearAuthToken } from '../config/auth';
 
-const API_BASE_URL = 'http://localhost:8089/rest/api/v1/consultation/sinistres';
+const API_BASE_URL = 'http://localhost:9999/rest/api/v1/consultation/sinistres';
 
 class SinistreService {
   

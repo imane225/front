@@ -1,6 +1,7 @@
 // 📁 src/services/lot/lotService.js
 import api from './axiosLot';
 
+
 /**
  * 🔍 Rechercher un lot par numéro avec critère de recherche
  */
@@ -91,6 +92,15 @@ const getLotsByPoliceAndDate = async (numeroPolice, dateDebut, dateFin) => {
   });
   return response.data;
 };
+const rechercherParGestionnaire = async (gestionnaire) => {
+  const response = await api.get(`/by-gestionnaire/${gestionnaire}`);
+  return {
+    data: Array.isArray(response.data) ? response.data : [response.data],
+    message: `Lots trouvés pour le gestionnaire ${gestionnaire}`
+  };
+};
+
+
 
 /**
  * ⚠️ Gestion centralisée des erreurs
@@ -110,6 +120,7 @@ export default {
   rechercherParNumeroPoliceEtPeriode,
   createLotExterne,
   createLotInterne,
+  rechercherParGestionnaire,
   modifierLot,
   modifierLotsBatch,
   handleAPIError,

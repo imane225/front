@@ -6,8 +6,8 @@ import { getAuthToken, isTokenValid, clearAuthToken } from '../config/auth';
  * Instance Axios configurée pour l'API des lots
  */
 const api = axios.create({
-  baseURL: 'http://localhost:8089/rest/api/lots',
-  timeout: 10000, // Timeout de 10 secondes
+  baseURL: 'http://localhost:9999/rest/api/lots',
+  timeout: 1000000, // Timeout de 10 secondes
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -131,6 +131,20 @@ export const createLot = async (lotData) => {
     return response.data;
   } catch (error) {
     console.error('❌ Erreur lors de la création du lot:', error);
+    throw error;
+  }
+};
+/**
+ * Récupère les lots associés à un gestionnaire
+ * @param {string} gestionnaire - Nom ou identifiant du gestionnaire
+ * @returns {Promise} Liste des lots
+ */
+export const getLotsByGestionnaire = async (gestionnaire) => {
+  try {
+    const response = await api.get(`/by-gestionnaire/${gestionnaire}`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Erreur lors de la récupération des lots du gestionnaire "${gestionnaire}":`, error);
     throw error;
   }
 };

@@ -21,6 +21,7 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
     numeroPolice: '',
     dateDebut: '',
     dateFin: '',
+    gestionnaire: '', // <== ajouté
     typeRecherche: 'EXACTE'
   });
   const [results, setResults] = useState([]);
@@ -49,6 +50,9 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
           searchParams.dateDebut,
           searchParams.dateFin
         );
+        } else if (activeTab === 'by-gestionnaire') {
+        response = await lotService.rechercherParGestionnaire(
+        searchParams.gestionnaire);
       } else if (activeTab === 'combinee') {
         response = await lotService.rechercherCombinee({
           numeroLot: searchParams.numeroLot || null,
@@ -114,6 +118,10 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
           <button className={`tab-button ${activeTab === 'numeroLot' ? 'active' : ''}`} onClick={() => setActiveTab('numeroLot')}>
             <Search className="tab-icon" /> Par Numéro
           </button>
+          <button className={`tab-button ${activeTab === 'by-gestionnaire' ? 'active' : ''}`} onClick={() => setActiveTab('by-gestionnaire')}>
+            <Search className="tab-icon" /> Par Gestionnaire
+          </button>
+
           <button className={`tab-button ${activeTab === 'by-police' ? 'active' : ''}`} onClick={() => setActiveTab('by-police')}>
             <Calendar className="tab-icon" /> Par Police + Période
           </button>
@@ -155,6 +163,18 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
               </div>
             </>
           )}
+            {activeTab === 'by-gestionnaire' && (
+              <div className="form-group span-2">
+                <label className="form-label required">Nom du Gestionnaire</label>
+                <input
+                  type="text"
+                  value={searchParams.gestionnaire || ''}
+                  onChange={(e) => setSearchParams({ ...searchParams, gestionnaire: e.target.value })}
+                  placeholder="Saisir le nom du gestionnaire"
+                  className="form-input"
+                />
+              </div>
+            )}
 
           {activeTab === 'by-police' && (
             <>
