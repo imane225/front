@@ -50,35 +50,35 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
   "3": { 
     label: "Lettre de rejet", 
     icon: FileX, 
-    color: "bg-[#D32F2F]", // Rouge vif
-    hoverColor: "bg-[#B71C1C]", // Rouge plus foncé au survol
+    color: "bg-[#D32F2F]", 
+    hoverColor: "bg-[#B71C1C]", 
     type: "REJET" 
   },
   "4": { 
     label: "Décompte", 
     icon: FileCheck, 
-    color: "bg-[#388E3C]", // Vert foncé
+    color: "bg-[#388E3C]", 
     hoverColor: "bg-[#2E7D32]", 
     type: "DECOMPTE" 
   },
   "6": { 
     label: "Lettre complement", 
     icon: FileQuestion, 
-    color: "bg-[#FB8C00]", // Orange vif
+    color: "bg-[#FB8C00]", 
     hoverColor: "bg-[#F57C00]", 
     type: "COMPLEMENT" 
   },
   "8": { 
     label: "Convocation CV", 
     icon: Stethoscope, 
-    color: "bg-[#7B1FA2]", // Violet
+    color: "bg-[#7B1FA2]", 
     hoverColor: "bg-[#6A1B9A]", 
     type: "CONTRE_VISITE" 
   },
   "11": { 
     label: "Lettre d'accord", 
     icon: CheckCircle, 
-    color: "bg-[#1976D2]", // Bleu
+    color: "bg-[#1976D2]", 
     hoverColor: "bg-[#1565C0]", 
     type: "ACCORD" 
   }

@@ -23,13 +23,11 @@ const recentActivities = [
 const DashboardRMA = ({ sidebarCollapsed }) => {
   return (
     <div className={`dashboard-container ${sidebarCollapsed ? 'collapsed' : 'open'}`}>
-      {/* Header avec titre principal */}
       <div className="dashboard-header">
         <h1 className="main-title">Vue d'ensemble</h1>
         <p className="subtitle">Tableau de bord des sinistres et indicateurs clés</p>
       </div>
 
-      {/* Cartes de statistiques principales */}
       <div className="stats-section">
         <div className="dashboard-cards">
           <div className="card stats-card">
@@ -67,7 +65,6 @@ const DashboardRMA = ({ sidebarCollapsed }) => {
         </div>
       </div>
 
-      {/* Section Indicateurs Financiers */}
       <div className="section">
         <h2 className="section-title">Indicateurs Financiers</h2>
         <div className="dashboard-cards">
@@ -95,7 +92,6 @@ const DashboardRMA = ({ sidebarCollapsed }) => {
         </div>
       </div>
 
-      {/* Section Analyse des Sinistres */}
       <div className="section">
         <h2 className="section-title">Analyse des Sinistres</h2>
         <div className="chart-container">
@@ -135,7 +131,6 @@ const DashboardRMA = ({ sidebarCollapsed }) => {
         </div>
       </div>
 
-      {/* Section Activités Récentes */}
       <div className="section">
         <h2 className="section-title">Activités Récentes</h2>
         <div className="table-container">

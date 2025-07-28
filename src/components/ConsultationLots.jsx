@@ -22,7 +22,7 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
     numeroPolice: '',
     dateDebut: '',
     dateFin: '',
-    gestionnaire: '', // <== ajouté
+    gestionnaire: '',
     typeRecherche: 'EXACTE'
   });
   const [results, setResults] = useState([]);
@@ -136,7 +136,6 @@ const ConsultationLots = ({ sidebarCollapsed }) => {
         {error && <div className="alert alert-error">{error}</div>}
         {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
-        {/* ✅ CORRECTION : Utilisation de form-grid-2 pour alignement sur même ligne */}
         <div className="form-content">
           {activeTab === 'numeroLot' && (
             <div className="form-grid form-grid-2">

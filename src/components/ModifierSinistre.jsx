@@ -49,7 +49,6 @@ const ModifierSinistre = ({ sidebarCollapsed = false }) => {
 
   const [validation, setValidation] = useState({});
 
-  // Chargement des types de déclaration
   useEffect(() => {
     const loadTypesDeclaration = async () => {
       try {

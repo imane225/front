@@ -1,24 +1,20 @@
-/* RMANavbar.css */
 .rma-navbar {
   background-color: #ffffff;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-bottom: 1px solid #d1d5db;
   
-  /* Navbar fixe */
   position: fixed;
   top: 0;
-  left: 250px; /* Largeur de la sidebar ouverte */
+  left: 250px; 
   right: 0;
   z-index: 1000;
-  height: 80px; /* Hauteur fixe de 80px (5rem) */
+  height: 80px; 
   
-  /* Transition pour l'animation */
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Navbar quand sidebar est fermée/réduite */
 .rma-navbar.sidebar-collapsed {
-  left: 64px; /* Même largeur que .rma-sidebar.collapsed */
+  left: 64px; 
 }
 
 .rma-navbar-container {
@@ -377,11 +373,10 @@
   outline-offset: 2px;
 }
 
-/* Media queries */
 @media (max-width: 768px) {
   .rma-navbar {
-    left: 0; /* Navbar pleine largeur sur mobile */
-    height: 64px; /* Plus petite sur mobile */
+    left: 0; 
+    height: 64px; 
   }
   
   .rma-navbar.sidebar-collapsed {
@@ -421,7 +416,7 @@
 
 @media (max-width: 480px) {
   .rma-navbar {
-    height: 56px; /* Encore plus petite sur très petit écran */
+    height: 56px; 
   }
   
   .rma-navbar-content {

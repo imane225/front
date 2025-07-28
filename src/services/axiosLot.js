@@ -1,22 +1,17 @@
-// 📁 src/services/axiosLot.js
 import axios from 'axios';
 import { getAuthToken, isTokenValid, clearAuthToken } from '../config/auth';
 
-/**
- * Instance Axios configurée pour l'API des lots
- */
+
 const api = axios.create({
-  baseURL: 'http://localhost:9999/rest/api/lots',
-  timeout: 1000000, // Timeout de 10 secondes
+  baseURL: 'http://localhost:8089/rest/api/lots',
+  timeout: 10000000, 
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
 });
 
-/**
- * Intercepteur de requête pour ajouter automatiquement le token d'authentification
- */
+
 api.interceptors.request.use(
   (config) => {
     const token = getAuthToken();
@@ -27,12 +22,10 @@ api.interceptors.request.use(
     } else if (token) {
       console.warn('⚠️ Token expiré détecté (lots) - Suppression du localStorage');
       clearAuthToken();
-      // Note: Dans un vrai système, vous pourriez rediriger vers la page de login ici
     } else {
       console.warn('⚠️ Aucun token disponible pour la requête (lots)');
     }
     
-    // Assurer que Content-Type est défini
     config.headers['Content-Type'] = 'application/json';
     
     console.log(`🌐 Requête ${config.method?.toUpperCase()} vers: ${config.url}`);
@@ -45,9 +38,7 @@ api.interceptors.request.use(
   }
 );
 
-/**
- * Intercepteur de réponse pour gérer les erreurs d'authentification
- */
+
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ Réponse reçue (lots): ${response.status}`);
@@ -61,7 +52,6 @@ api.interceptors.response.use(
         case 401:
           console.error('🚫 Erreur d\'authentification (lots) - Token invalide ou expiré');
           clearAuthToken();
-          // Vous pourriez déclencher une redirection vers la page de login ici
           break;
         case 403:
           console.error('🚫 Accès interdit (lots) - Permissions insuffisantes');
@@ -85,15 +75,7 @@ api.interceptors.response.use(
   }
 );
 
-/**
- * Fonctions utilitaires pour les opérations sur les lots
- */
 
-/**
- * Récupère tous les lots
- * @param {object} params - Paramètres de requête (pagination, filtres, etc.)
- * @returns {Promise} Promesse résolue avec les données des lots
- */
 export const getAllLots = async (params = {}) => {
   try {
     const response = await api.get('/', { params });
@@ -104,11 +86,6 @@ export const getAllLots = async (params = {}) => {
   }
 };
 
-/**
- * Récupère un lot spécifique par son ID
- * @param {string|number} lotId - ID du lot
- * @returns {Promise} Promesse résolue avec les données du lot
- */
 export const getLotById = async (lotId) => {
   try {
     const response = await api.get(`/${lotId}`);
@@ -119,11 +96,7 @@ export const getLotById = async (lotId) => {
   }
 };
 
-/**
- * Crée un nouveau lot
- * @param {object} lotData - Données du lot à créer
- * @returns {Promise} Promesse résolue avec les données du lot créé
- */
+
 export const createLot = async (lotData) => {
   try {
     const response = await api.post('/', lotData);
@@ -134,11 +107,7 @@ export const createLot = async (lotData) => {
     throw error;
   }
 };
-/**
- * Récupère les lots associés à un gestionnaire
- * @param {string} gestionnaire - Nom ou identifiant du gestionnaire
- * @returns {Promise} Liste des lots
- */
+
 export const getLotsByGestionnaire = async (gestionnaire) => {
   try {
     const response = await api.get(`/by-gestionnaire/${gestionnaire}`);
@@ -149,12 +118,7 @@ export const getLotsByGestionnaire = async (gestionnaire) => {
   }
 };
 
-/**
- * Met à jour un lot existant
- * @param {string|number} lotId - ID du lot à mettre à jour
- * @param {object} lotData - Nouvelles données du lot
- * @returns {Promise} Promesse résolue avec les données du lot mis à jour
- */
+
 export const updateLot = async (lotId, lotData) => {
   try {
     const response = await api.put(`/${lotId}`, lotData);
@@ -166,11 +130,7 @@ export const updateLot = async (lotId, lotData) => {
   }
 };
 
-/**
- * Supprime un lot
- * @param {string|number} lotId - ID du lot à supprimer
- * @returns {Promise} Promesse résolue une fois le lot supprimé
- */
+
 export const deleteLot = async (lotId) => {
   try {
     await api.delete(`/${lotId}`);
@@ -181,5 +141,4 @@ export const deleteLot = async (lotId) => {
   }
 };
 
-// Export de l'instance axios par défaut pour des utilisations personnalisées
 export default api;

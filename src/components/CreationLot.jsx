@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import lotService from '../services/lotService';
-import './CreerSinistre.css'; // ✅ Utilise le CSS de CreerSinistre
+import './CreerSinistre.css';
 
 const CreationLot = ({ sidebarCollapsed = false }) => {
   const navigate = useNavigate();
@@ -37,10 +37,10 @@ const CreationLot = ({ sidebarCollapsed = false }) => {
     typeLotId: '',
     nombreSinistresRecu: '',
     nombreSinistresDeclare: '',
-    raisonSocialeClient: '' // champ pour affichage client
+    raisonSocialeClient: ''
   });
 
-  const [infosPolice, setInfosPolice] = useState(null); // infos récupérées
+  const [infosPolice, setInfosPolice] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
   const handleBack = () => {
@@ -60,7 +60,6 @@ const CreationLot = ({ sidebarCollapsed = false }) => {
       [field]: value
     }));
     
-    // Effacer l'erreur de validation pour ce champ
     if (validationErrors[field] && value.trim()) {
       setValidationErrors(prev => ({
         ...prev,
@@ -69,7 +68,6 @@ const CreationLot = ({ sidebarCollapsed = false }) => {
     }
   };
 
-  // Récupération automatique infos police
   useEffect(() => {
     const fetchInfos = async () => {
       if (formData.numeroPolice.length === 10) {
@@ -84,13 +82,11 @@ const CreationLot = ({ sidebarCollapsed = false }) => {
           };
           setInfosPolice(infos);
 
-          // Préremplissage de la raison sociale dans formData
           setFormData(prev => ({
             ...prev,
             raisonSocialeClient: infos.raisonSocialeClient
           }));
 
-          // Ouvrir automatiquement la section des infos
           setExpandedSections(prev => ({
             ...prev,
             infos: true
@@ -114,19 +110,16 @@ const CreationLot = ({ sidebarCollapsed = false }) => {
   const validateForm = () => {
     const errors = {};
     
-    // Validation du numéro de police
     if (!formData.numeroPolice.trim()) {
       errors.numeroPolice = 'Le numéro de police est obligatoire';
     } else if (formData.numeroPolice.length !== 10) {
       errors.numeroPolice = 'Le numéro de police doit contenir exactement 10 caractères';
     }
     
-    // Validation du type de lot
     if (!formData.typeLotId.trim()) {
       errors.typeLotId = 'Le type de lot est obligatoire';
     }
     
-    // Validation du nombre de sinistres reçus
     if (!formData.nombreSinistresRecu || formData.nombreSinistresRecu === '') {
       errors.nombreSinistresRecu = 'Le nombre de sinistres reçus est obligatoire';
     } else {
@@ -136,7 +129,6 @@ const CreationLot = ({ sidebarCollapsed = false }) => {
       }
     }
     
-    // Validation conditionnelle pour les lots externes
     if (formData.typeLotId === '2') {
       if (!formData.nombreSinistresDeclare || formData.nombreSinistresDeclare === '') {
         errors.nombreSinistresDeclare = 'Le nombre de sinistres déclarés est obligatoire pour les lots externes';

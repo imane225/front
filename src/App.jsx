@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 
-// Import des composants
 import Accueil from './components/Accueil';
 import DashboardRMA from './components/DashboardRMA';
 import RMANavbar from './components/RMANavbar.jsx';
@@ -19,7 +18,6 @@ function AppContent() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const location = useLocation();
 
-  // Déterminer si la sidebar doit être affichée selon la route
   const showSidebar =
     location.pathname.startsWith('/sante') ||
     location.pathname.startsWith('/DashboardRMA') ||
@@ -29,13 +27,11 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar - s'affiche seulement si sidebar est visible */}
       {showSidebar && (
         <RMANavbar isSidebarCollapsed={isSidebarCollapsed} />
       )}
 
       <div className="flex">
-        {/* Sidebar */}
         {showSidebar && (
           <RMASidebar
             isCollapsed={isSidebarCollapsed}
@@ -43,23 +39,19 @@ function AppContent() {
           />
         )}
 
-        {/* Contenu principal */}
         <div className={`flex-1 transition-all duration-300 ${
           showSidebar 
             ? `${isSidebarCollapsed ? 'ml-16' : 'ml-64'} mt-16 p-6`
             : ''
         }`}>
           <Routes>
-            {/* Route d'accueil */}
             <Route path="/" element={<Accueil />} />
             
-            {/* Routes pour le dashboard santé */}
             <Route 
               path="/sante" 
               element={<DashboardRMA sidebarCollapsed={isSidebarCollapsed} />} 
             />
             
-            {/* Routes pour les sinistres */}
             <Route 
               path="/sinistres" 
               element={<ConsultationSinistres sidebarCollapsed={isSidebarCollapsed} />} 
@@ -85,7 +77,6 @@ function AppContent() {
               element={<ModifierSinistre sidebarCollapsed={isSidebarCollapsed} />} 
             />
             
-            {/* Routes pour les lots */}
             <Route 
               path="/lots" 
               element={<ConsultationLots sidebarCollapsed={isSidebarCollapsed} />} 

@@ -18,7 +18,7 @@ import {
   Package
 } from 'lucide-react';
 import lotService from '../services/lotService';
-import './ModifierSinistre.css'; // ✅ Utilise le CSS de ModifierSinistre
+import './ModifierSinistre.css'; 
 
 const EditLot = ({ sidebarCollapsed = false }) => {
   const { id } = useParams();
@@ -103,7 +103,6 @@ const EditLot = ({ sidebarCollapsed = false }) => {
       [field]: value
     }));
     
-    // Effacer la validation pour le champ modifié
     if (validation[field]) {
       setValidation(prev => ({
         ...prev,
@@ -118,19 +117,16 @@ const EditLot = ({ sidebarCollapsed = false }) => {
   const validateForm = () => {
     const errors = {};
     
-    // Validation du motif de modification (obligatoire)
     if (!formData.motifModifAnnul || !formData.motifModifAnnul.trim()) {
       errors.motifModifAnnul = 'Le motif de modification est obligatoire';
     } else if (formData.motifModifAnnul.trim().length < 5) {
       errors.motifModifAnnul = 'Le motif doit contenir au moins 5 caractères';
     }
     
-    // Validation du numéro de police
     if (!formData.numeroPolice || !formData.numeroPolice.trim()) {
       errors.numeroPolice = 'Le numéro de police est obligatoire';
     }
     
-    // Validation du nombre de sinistres reçus
     if (!formData.nombreSinistresRecu || formData.nombreSinistresRecu === '') {
       errors.nombreSinistresRecu = 'Le nombre de sinistres reçus est obligatoire';
     } else {
@@ -140,7 +136,6 @@ const EditLot = ({ sidebarCollapsed = false }) => {
       }
     }
     
-    // Validation conditionnelle pour les lots externes
     if (formData.typeLotId === '2') {
       if (!formData.nombreSinistresDeclare || formData.nombreSinistresDeclare === '') {
         errors.nombreSinistresDeclare = 'Le nombre de sinistres déclarés est obligatoire pour les lots externes';
@@ -152,7 +147,6 @@ const EditLot = ({ sidebarCollapsed = false }) => {
       }
     }
     
-    // Validation de la date de réception
     if (formData.dateReception) {
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(formData.dateReception)) {

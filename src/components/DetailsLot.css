@@ -4,21 +4,19 @@
   min-height: 100vh;
   transition: all 0.3s ease;
   
-  /* Ajustements pour éviter la superposition */
-  margin-left: 250px; /* Largeur sidebar normale */
-  padding-top: 104px; /* 80px navbar + 24px espacement */
+  margin-left: 250px; 
+  padding-top: 104px; 
   box-sizing: border-box;
 }
 
 .details-container.sidebar-collapsed {
-  margin-left: 64px; /* Largeur sidebar collapsed */
+  margin-left: 64px; 
 }
 
-/* Media queries pour la responsivité */
 @media (max-width: 768px) {
   .details-container {
     margin-left: 0;
-    padding-top: 88px; /* 64px navbar mobile + 24px espacement */
+    padding-top: 88px; 
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -30,7 +28,7 @@
 
 @media (max-width: 480px) {
   .details-container {
-    padding-top: 80px; /* 56px navbar très petit écran + 24px espacement */
+    padding-top: 80px; 
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -99,7 +97,6 @@
   gap: 8px;
 }
 
-/* Suppression du background orange des icônes */
 .status-icon {
   width: 20px;
   height: 20px;
@@ -232,7 +229,6 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* Suppression du background orange des icônes */
 .card-icon {
   width: 20px;
   height: 20px;
@@ -255,7 +251,6 @@
   align-items: center;
 }
 
-/* Suppression du background orange des icônes */
 .expand-icon {
   width: 16px;
   height: 16px;
@@ -359,7 +354,6 @@
   text-decoration: none;
 }
 
-/* Suppression du background orange des icônes de boutons */
 .btn-icon {
   width: 16px;
   height: 16px;
@@ -395,7 +389,6 @@
   border-color: #9ca3af;
 }
 
-/* Boutons de documents */
 .document-btn {
   display: inline-flex;
   align-items: center;
@@ -416,7 +409,6 @@
   cursor: not-allowed;
 }
 
-/* Suppression du background orange des icônes de loading */
 .loading-icon {
   animation: spin 1s linear infinite;
   background: none !important;
@@ -477,12 +469,10 @@
   background: none !important;
 }
 
-/* Global fix pour toutes les icônes Lucide React */
 svg {
   background: none !important;
 }
 
-/* Media queries pour la responsivité mobile */
 @media (max-width: 1024px) {
   .details-grid {
     grid-template-columns: 1fr;
@@ -500,7 +490,7 @@ svg {
 @media (max-width: 768px) {
   .details-container {
     padding: 16px;
-    padding-top: 88px; /* Ajusté pour mobile */
+    padding-top: 88px; 
   }
   
   .details-header {
@@ -538,11 +528,10 @@ svg {
 
 @media (max-width: 480px) {
   .details-container {
-    padding-top: 80px; /* Ajusté pour très petit écran */
+    padding-top: 80px; 
   }
 }
 
-/* Styles d'impression modernisés */
 @media print {
   body * {
     visibility: hidden;

@@ -19,19 +19,15 @@ import './ConsultationSinistres.css';
 
 const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   
-  // État utilisateur pour affichage des informations
   const [userInfo, setUserInfo] = useState(null);
   const [etatsSinistre, setEtatsSinistre] = useState([]);
   const [loadingEtats, setLoadingEtats] = useState(true);
   
   useEffect(() => {
-    // ✅ Plus besoin de hardcoder le token ici, il est centralisé
     const currentToken = getAuthToken();
     if (currentToken) {
-      // Utilisation de la configuration centralisée
       SinistreService.setToken(currentToken);
       
-      // Extraction des informations utilisateur depuis le token
       const userData = getUserInfoFromToken(currentToken);
       if (userData) {
         setUserInfo(userData);
@@ -44,7 +40,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     }
   }, []); 
 
-  // Chargement des états de sinistre
   useEffect(() => {
     const loadEtatsSinistre = async () => {
       try {
@@ -54,7 +49,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
         console.log('✅ États de sinistre chargés:', response.data);
       } catch (error) {
         console.error('Erreur chargement états:', error);
-        // Les états de fallback sont déjà gérés dans le service
       } finally {
         setLoadingEtats(false);
       }
@@ -83,14 +77,60 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
 
   const navigate = useNavigate();
 
-  // ✅ Fonction utilitaire pour gérer les erreurs de manière centralisée
+  const formatEtatForDisplay = (etatLibelle) => {
+    if (!etatLibelle || typeof etatLibelle !== 'string') return etatLibelle;
+
+    const mappingEtats = {
+      "Ouvert": "Ouvert",
+      "En cours de chiffrage": "En cours de chiffrage", 
+      "En attente de traitement": "En attente de traitement",
+      "Rejeté": "Rejeté",
+      "Réglé": "Réglé",
+      "En attente de complément d'information": "En attente de complément d'information",
+      "En attente de complément d'information interne": "En attente de complément d'information interne",
+      "Sans suite": "Sans suite",
+      "En attente de contrôle médical": "En attente de contrôle médical",
+      "En attente de contre visite": "En attente de contre visite",
+      "En attente d'établissement de décompte": "En attente d'établissement de décompte",
+      "Établissement de décompte en cours": "Établissement de décompte en cours",
+      "En attente facture définitive": "En attente facture définitive",
+      "En attente de contrôle médical systématique": "En attente de contrôle médical systématique",
+      "Annulé": "Annulé",
+      "Accord réglé partiellement": "Accord réglé partiellement",
+      "Règlement annulé": "Règlement annulé",
+      "En attente MAJ RIB Adhérent": "En attente MAJ RIB Adhérent",
+      "En attente MAJ RIB Société": "En attente MAJ RIB Société",
+      "En attente MAJ Carte": "En attente MAJ Carte",
+      "Migré (à réouvrir)": "Migré (à réouvrir)"
+    };
+
+    const etatFormate = mappingEtats[etatLibelle];
+    if (etatFormate) {
+      console.log(`🔄 Format état: "${etatLibelle}" → "${etatFormate}"`);
+      return etatFormate;
+    }
+
+    console.log(`⚠️ État non mappé: "${etatLibelle}"`);
+    return etatLibelle;
+  };
+
   const handleApiError = (error, operation = 'opération') => {
     console.error(`❌ Erreur lors de ${operation}:`, error);
     
-    // Si erreur 401, le token a peut-être expiré
+    const message = error?.message || '';
+    
+    if (message.includes('complement') || message.includes('complément')) {
+      setError('Erreur de recherche avec "complément". La recherche fonctionne automatiquement avec ou sans accent.');
+      return;
+    }
+    
+    if (message.includes('accent') || message.includes('caractère spécial')) {
+      setError('Erreur de caractères spéciaux. La recherche supporte automatiquement les accents.');
+      return;
+    }
+    
     if (error.response?.status === 401) {
       setError('Session expirée. Veuillez vous reconnecter.');
-      // Ici vous pourriez déclencher une redirection vers la page de login
       return;
     }
     
@@ -98,15 +138,22 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setError(errorMsg);
   };
 
-  // ✅ Fonction pour valider les entrées utilisateur
   const validateSearchInput = (input, fieldName) => {
     if (!input || typeof input !== 'string') return false;
     
     const trimmedInput = input.trim();
     if (trimmedInput.length === 0) return false;
     
-    // Validation basique pour éviter les caractères dangereux
-    const dangerousChars = /[<>'";&\\]/;
+    if (fieldName.includes('état') || fieldName.includes('sinistre')) {
+      const etatSafeChars = /[<>";&\\]/; 
+      if (etatSafeChars.test(trimmedInput)) {
+        setError(`Caractères non autorisés dans ${fieldName}`);
+        return false;
+      }
+      return true;  
+    }
+    
+    const dangerousChars = /[<>";&\\]/;
     if (dangerousChars.test(trimmedInput)) {
       setError(`Caractères non autorisés dans ${fieldName}`);
       return false;
@@ -217,7 +264,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       const response = await SinistreService.rechercherParNatureMaladie(
         searchParams.natureMaladie.trim(),
         searchParams.typeRecherche,
-        50 // Limite de résultats
+        50 
       );
       
       const resultData = response.data || [];
@@ -238,10 +285,16 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherParEtat = async () => {
-    if (!validateSearchInput(searchParams.etatSinistre, 'l\'état du sinistre')) {
-      if (!searchParams.etatSinistre.trim()) {
-        setError('L\'état du sinistre est obligatoire');
-      }
+    const etatTrimmed = searchParams.etatSinistre.trim();
+    
+    if (!etatTrimmed) {
+      setError('L\'état du sinistre est obligatoire');
+      return;
+    }
+
+    const etatSafeChars = /[<>";&\\]/; 
+    if (etatSafeChars.test(etatTrimmed)) {
+      setError('Caractères non autorisés dans l\'état du sinistre');
       return;
     }
 
@@ -250,10 +303,16 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setSuccessMessage('');
 
     try {
-      console.log('🔍 Recherche par état:', searchParams.etatSinistre);
+      console.log('🔍 rechercherParEtat - DÉBUT DEBUG');
+      console.log('🔍 État brut depuis searchParams:', `"${searchParams.etatSinistre}"`);
+      console.log('🔍 État après trim:', `"${etatTrimmed}"`);
+      console.log('🔍 Longueur après trim:', etatTrimmed.length);
+      console.log('🔍 Caractères détaillés:', [...etatTrimmed].map(c => `${c}(${c.charCodeAt(0)})`));
+      console.log('🔍 Type de recherche:', searchParams.typeRecherche);
+      console.log('🔍 rechercherParEtat - FIN DEBUG');
       
       const response = await SinistreService.rechercherParEtat(
-        searchParams.etatSinistre.trim(),
+        etatTrimmed,
         searchParams.typeRecherche
       );
       
@@ -264,8 +323,9 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       setCurrentPage(1);
       setSuccessMessage(response.message || `${resultData.length} sinistre(s) trouvé(s)`);
       
-      console.log('✅ Recherche terminée:', resultData.length, 'résultat(s)');
+      console.log('✅ Recherche par état terminée:', resultData.length, 'résultat(s)');
     } catch (error) {
+      console.error('❌ Erreur dans rechercherParEtat:', error);
       handleApiError(error, 'la recherche par état');
       setResults([]);
       setTotalResults(0);
@@ -277,7 +337,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   const rechercherCombine = async () => {
     const { numSinistre, nom, prenom, natureMaladie, etatSinistre } = searchParams;
     
-    // Validation : au moins un critère doit être valide
     const hasValidCriteria = [
       numSinistre.trim(),
       nom.trim(),
@@ -291,18 +350,25 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       return;
     }
 
-    // Validation des caractères pour chaque champ renseigné
     const fieldsToValidate = [
       { value: numSinistre, name: 'le numéro de sinistre' },
       { value: nom, name: 'le nom' },
       { value: prenom, name: 'le prénom' },
-      { value: natureMaladie, name: 'la nature de maladie' },
-      { value: etatSinistre, name: 'l\'état du sinistre' }
+      { value: natureMaladie, name: 'la nature de maladie' }
     ];
 
     for (const field of fieldsToValidate) {
       if (field.value.trim() && !validateSearchInput(field.value, field.name)) {
-        return; // L'erreur est déjà définie dans validateSearchInput
+        return; 
+      }
+    }
+
+    if (etatSinistre.trim()) {
+      const etatTrimmed = etatSinistre.trim();
+      const etatSafeChars = /[<>";&\\]/; 
+      if (etatSafeChars.test(etatTrimmed)) {
+        setError('Caractères non autorisés dans l\'état du sinistre');
+        return;
       }
     }
 
@@ -321,10 +387,16 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       
       console.log('🔍 Recherche combinée:', searchCriteria);
       
+      if (searchCriteria.etatSinistre) {
+        console.log('🔍 rechercherCombine - État sélectionné:', `"${searchCriteria.etatSinistre}"`);
+        console.log('🔍 rechercherCombine - Longueur état:', searchCriteria.etatSinistre.length);
+        console.log('🔍 rechercherCombine - Caractères état:', [...searchCriteria.etatSinistre].map(c => `${c}(${c.charCodeAt(0)})`));
+      }
+      
       const response = await SinistreService.rechercherCombine(
         searchCriteria,
         searchParams.typeRecherche,
-        50 // Limite de résultats
+        50 
       );
       
       const resultData = response.data || [];
@@ -348,7 +420,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setError('');
     setSuccessMessage('');
     
-    // Vérifier que l'utilisateur est toujours authentifié
     const currentToken = getAuthToken();
     if (!currentToken) {
       setError('Session expirée. Veuillez vous reconnecter.');
@@ -438,13 +509,12 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     });
   };
 
-  // ✅ Fonction pour nettoyer les messages d'erreur/succès après un délai
   useEffect(() => {
     if (error || successMessage) {
       const timer = setTimeout(() => {
         setError('');
         setSuccessMessage('');
-      }, 5000); // Effacer après 5 secondes
+      }, 5000); 
       
       return () => clearTimeout(timer);
     }
@@ -524,39 +594,41 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
         );
 
       case 'etat-sinistre':
-  return (
-    <div className="form-grid form-grid-2">
-      <div className="form-group">
-        <label className="form-label required">
-          État du sinistre
-        </label>
-        <div className="select-wrapper">
-          <select
-            value={searchParams.etatSinistre}
-            onChange={(e) => {
-              // Convertir l'affichage avec accent en valeur sans accent
-              const value = e.target.value === "En attente de complement d\'information" 
-                ? "En attente de complement d\'information" 
-                : e.target.value;
-              setSearchParams({...searchParams, etatSinistre: value});
-            }}
-            className="form-select"
-            disabled={loadingEtats}
-          >
-            <option value="">-- Sélectionner un état --</option>
-            {etatsSinistre.map(etat => (
-              <option key={etat.code} value={etat.libelle}>
-                {/* Afficher avec accent mais stocker sans accent */}
-                {etat.libelle.replace('complement', 'complement')}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="select-icon" />
-        </div>
-        {loadingEtats && (
-          <span className="help-text">Chargement des états...</span>
-        )}
-      </div>
+        return (
+          <div className="form-grid form-grid-2">
+            <div className="form-group">
+              <label className="form-label required">
+                État du sinistre
+              </label>
+              <div className="select-wrapper">
+                <select
+                  value={searchParams.etatSinistre}
+                  onChange={(e) => {
+                    const selectedValue = e.target.value;
+                    console.log('🔍 Select État - Valeur sélectionnée:', `"${selectedValue}"`);
+                    console.log('🔍 Select État - Longueur:', selectedValue.length);
+                    console.log('🔍 Select État - Caractères détaillés:', [...selectedValue].map(c => `${c}(${c.charCodeAt(0)})`));
+                    
+                    setSearchParams({...searchParams, etatSinistre: selectedValue});
+                    
+                    console.log('✅ État stocké dans searchParams:', selectedValue);
+                  }}
+                  className="form-select"
+                  disabled={loadingEtats}
+                >
+                  <option value="">-- Sélectionner un état --</option>
+                  {etatsSinistre.map(etat => (
+                    <option key={etat.code} value={etat.libelle}>
+                      {formatEtatForDisplay(etat.libelle)}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="select-icon" />
+              </div>
+              {loadingEtats && (
+                <span className="help-text">Chargement des états...</span>
+              )}
+            </div>
             <div className="form-group">
               <label className="form-label">
                 Type de correspondance
@@ -629,7 +701,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 </div>
               </div>
               <div className="form-group">
-                {/* Cellule vide pour l'alignement */}
               </div>
             </div>
             <div className="form-info">
@@ -742,14 +813,23 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                 <div className="select-wrapper">
                   <select
                     value={searchParams.etatSinistre}
-                    onChange={(e) => setSearchParams({...searchParams, etatSinistre: e.target.value})}
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+                      console.log('🔍 Select Combiné - Valeur sélectionnée:', `"${selectedValue}"`);
+                      console.log('🔍 Select Combiné - Longueur:', selectedValue.length);
+                      console.log('🔍 Select Combiné - Caractères détaillés:', [...selectedValue].map(c => `${c}(${c.charCodeAt(0)})`));
+                      
+                      setSearchParams({...searchParams, etatSinistre: selectedValue});
+                      
+                      console.log('✅ État stocké dans searchParams (combiné):', selectedValue);
+                    }}
                     className="form-select"
                     disabled={loadingEtats}
                   >
                     <option value="">-- Sélectionner un état --</option>
                     {etatsSinistre.map(etat => (
                       <option key={etat.code} value={etat.libelle}>
-                        {etat.libelle}
+                        {formatEtatForDisplay(etat.libelle)}
                       </option>
                     ))}
                   </select>
@@ -788,7 +868,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
 
   return (
     <div className={`consultation-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* Header avec informations utilisateur */}
       <div className="page-header">
         <div className="page-header-main">
           <h1 className="page-title">Consultation des Sinistres</h1>
@@ -948,7 +1027,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                           ? 'status-progress'
                           : 'status-default'
                       }`}>
-                        {sinistre.etatSinistreLibelle || 'N/A'}
+                        {formatEtatForDisplay(sinistre.etatSinistreLibelle || 'N/A')}
                       </span>
                     </td>
                     <td>
@@ -992,20 +1071,17 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                   Précédent
                 </button>
                 
-                {/* Génération intelligente des numéros de page */}
                 {(() => {
                   const maxVisiblePages = 5;
                   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
                   let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
                   
-                  // Ajuster startPage si on est proche de la fin
                   if (endPage - startPage + 1 < maxVisiblePages) {
                     startPage = Math.max(1, endPage - maxVisiblePages + 1);
                   }
                   
                   const pages = [];
                   
-                  // Page 1 si elle n'est pas dans la plage visible
                   if (startPage > 1) {
                     pages.push(
                       <button
@@ -1027,7 +1103,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                     }
                   }
                   
-                  // Pages visibles
                   for (let i = startPage; i <= endPage; i++) {
                     pages.push(
                       <button
@@ -1042,7 +1117,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
                     );
                   }
                   
-                  // Page finale si elle n'est pas dans la plage visible
                   if (endPage < totalPages) {
                     if (endPage < totalPages - 1) {
                       pages.push(
@@ -1132,7 +1206,6 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
         </div>
       )}
 
-      {/* Message d'aide contextuel */}
       {!loading && results.length === 0 && !error && (
         <div className="help-section">
           <div className="help-content">

@@ -26,21 +26,19 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   transition: all 0.3s ease;
   
-  /* Ajustements pour éviter la superposition */
-  margin-left: 250px; /* Largeur sidebar normale */
-  padding-top: 104px; /* 80px navbar + 24px espacement */
+  margin-left: 250px; 
+  padding-top: 104px; 
   box-sizing: border-box;
 }
 
 .modifier-container.sidebar-collapsed {
-  margin-left: 64px; /* Largeur sidebar collapsed */
+  margin-left: 64px; 
 }
 
-/* Media queries pour la responsivité */
 @media (max-width: 768px) {
   .modifier-container {
     margin-left: 0;
-    padding-top: 88px; /* 64px navbar mobile + 24px espacement */
+    padding-top: 88px; 
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -52,7 +50,7 @@
 
 @media (max-width: 480px) {
   .modifier-container {
-    padding-top: 80px; /* 56px navbar très petit écran + 24px espacement */
+    padding-top: 80px; 
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -123,7 +121,6 @@
   margin: 0;
 }
 
-/* Suppression du background orange des icônes */
 .title-icon {
   width: 28px;
   height: 28px;
@@ -137,7 +134,6 @@
   gap: 8px;
 }
 
-/* Suppression du background orange des icônes */
 .status-icon {
   width: 20px;
   height: 20px;
@@ -231,7 +227,6 @@
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
-/* Suppression du background orange des icônes */
 .warning-icon {
   width: 16px;
   height: 16px;
@@ -263,7 +258,6 @@
   border: 1px solid;
 }
 
-/* Suppression du background orange des icônes */
 .alert-icon {
   width: 20px;
   height: 20px;
@@ -354,7 +348,6 @@
   margin: 0;
 }
 
-/* Suppression du background orange des icônes */
 .section-icon {
   width: 20px;
   height: 20px;
@@ -605,7 +598,6 @@
   color: inherit;
 }
 
-/* Suppression du background orange des icônes */
 .btn-icon {
   width: 16px;
   height: 16px;
@@ -695,7 +687,6 @@
   margin: 0;
 }
 
-/* Suppression du background orange des icônes */
 .error-icon {
   color: var(--error-red);
   width: 64px;
@@ -704,7 +695,6 @@
   background: none !important;
 }
 
-/* Global fix pour toutes les icônes Lucide React */
 svg {
   background: none !important;
 }
@@ -718,7 +708,7 @@ svg {
 @media (max-width: 768px) {
   .modifier-container {
     padding: 16px;
-    padding-top: 88px; /* Navbar mobile + espacement */
+    padding-top: 88px; 
   }
   
   .modifier-container.sidebar-collapsed {
@@ -795,7 +785,7 @@ svg {
 
 @media (max-width: 480px) {
   .modifier-container {
-    padding-top: 80px; /* Navbar très petit écran + espacement */
+    padding-top: 80px; 
   }
   
   .modifier-form .form-actions,

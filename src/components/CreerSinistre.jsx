@@ -63,7 +63,6 @@ const CreerSinistre = ({ sidebarCollapsed = false }) => {
 
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Chargement des types de déclaration
   useEffect(() => {
     const loadTypesDeclaration = async () => {
       try {
@@ -72,7 +71,6 @@ const CreerSinistre = ({ sidebarCollapsed = false }) => {
         setTypesDeclaration(response.data);
       } catch (error) {
         console.error('Erreur chargement types:', error);
-        // Les types de fallback sont déjà gérés dans le service
       } finally {
         setLoadingTypes(false);
       }

@@ -4,21 +4,19 @@
   min-height: 100vh;
   transition: all 0.3s ease;
   
-  /* Ajustements pour éviter la superposition */
-  margin-left: 250px; /* Largeur sidebar normale */
-  padding-top: 104px; /* 80px navbar + 24px espacement */
+  margin-left: 250px; 
+  padding-top: 104px; 
   box-sizing: border-box;
 }
 
 .details-container.sidebar-collapsed {
-  margin-left: 64px; /* Largeur sidebar collapsed */
+  margin-left: 64px; 
 }
 
-/* Media queries pour la responsivité */
 @media (max-width: 768px) {
   .details-container {
     margin-left: 0;
-    padding-top: 88px; /* 64px navbar mobile + 24px espacement */
+    padding-top: 88px; 
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -30,7 +28,7 @@
 
 @media (max-width: 480px) {
   .details-container {
-    padding-top: 80px; /* 56px navbar très petit écran + 24px espacement */
+    padding-top: 80px; 
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -94,7 +92,6 @@
   align-items: center;
   gap: 8px;
 }
-/* Boutons de documents */
 .document-btn {
   display: inline-flex;
   align-items: center;
@@ -115,20 +112,17 @@
   cursor: not-allowed;
 }
 
-/* Couleurs spécifiques */
 .document-btn.bg-\[\#D32F2F\] { background-color: #D32F2F; }
 .document-btn.bg-\[\#388E3C\] { background-color: #388E3C; }
 .document-btn.bg-\[\#FB8C00\] { background-color: #FB8C00; }
 .document-btn.bg-\[\#7B1FA2\] { background-color: #7B1FA2; }
 .document-btn.bg-\[\#1976D2\] { background-color: #1976D2; }
 
-/* Couleurs de survol */
 .document-btn.bg-\[\#D32F2F\]:hover { background-color: #B71C1C; }
 .document-btn.bg-\[\#388E3C\]:hover { background-color: #2E7D32; }
 .document-btn.bg-\[\#FB8C00\]:hover { background-color: #F57C00; }
 .document-btn.bg-\[\#7B1FA2\]:hover { background-color: #6A1B9A; }
 .document-btn.bg-\[\#1976D2\]:hover { background-color: #1565C0; }
-/* Suppression du background orange des icônes */
 .status-icon {
   width: 20px;
   height: 20px;
@@ -254,7 +248,6 @@
   color: #111827;
 }
 
-/* Suppression du background orange des icônes */
 .card-icon {
   width: 20px;
   height: 20px;
@@ -277,7 +270,6 @@
   align-items: center;
 }
 
-/* Suppression du background orange des icônes */
 .expand-icon {
   width: 16px;
   height: 16px;
@@ -375,7 +367,6 @@
   text-decoration: none;
 }
 
-/* Suppression du background orange des icônes de boutons */
 .btn-icon {
   width: 16px;
   height: 16px;
@@ -411,7 +402,6 @@
   border-color: #9ca3af;
 }
 
-/* Boutons de documents */
 .document-btn {
   display: inline-flex;
   align-items: center;
@@ -432,7 +422,6 @@
   cursor: not-allowed;
 }
 
-/* Suppression du background orange des icônes de loading */
 .loading-icon {
   animation: spin 1s linear infinite;
   background: none !important;
@@ -493,12 +482,10 @@
   background: none !important;
 }
 
-/* Global fix pour toutes les icônes Lucide React */
 svg {
   background: none !important;
 }
 
-/* Media queries pour la responsivité mobile */
 @media (max-width: 1024px) {
   .details-grid {
     grid-template-columns: 1fr;
@@ -516,7 +503,7 @@ svg {
 @media (max-width: 768px) {
   .details-container {
     padding: 16px;
-    padding-top: 88px; /* Ajusté pour mobile */
+    padding-top: 88px; 
   }
   
   .details-header {
@@ -551,6 +538,6 @@ svg {
 
 @media (max-width: 480px) {
   .details-container {
-    padding-top: 80px; /* Ajusté pour très petit écran */
+    padding-top: 80px; 
   }
 }

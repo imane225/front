@@ -11,17 +11,14 @@ import {
   Plus
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import './RMASidebar.css'; // Importe le fichier CSS
+import './RMASidebar.css'; 
 
 const LOCAL_STORAGE_KEY = 'rma-sidebar-collapsed';
 
 const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
-  // Important : useState DOIT être à l’intérieur du composant
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    // Si localStorage présent, convertit string en booléen
     if (stored !== null) return stored === 'true';
-    // Sinon, sidebar fermée par défaut
     return true;
   });
 
@@ -30,7 +27,6 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Synchronise avec la prop externe si fournie
   useEffect(() => {
     if (typeof externalIsCollapsed === 'boolean') {
       setIsCollapsed(externalIsCollapsed);
@@ -38,7 +34,6 @@ const RMASidebar = ({ isCollapsed: externalIsCollapsed, onToggle }) => {
     }
   }, [externalIsCollapsed]);
 
-  // Met à jour l'item actif et menus ouverts selon URL
   useEffect(() => {
     const pathname = location.pathname;
 

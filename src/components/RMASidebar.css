@@ -1,4 +1,3 @@
-/* Définition des variables CSS pour une meilleure maintenabilité */
 :root {
   --sidebar-bg-start: #234585;
   --sidebar-bg-end: #1a3660;
@@ -15,7 +14,7 @@
 }
 
 .rma-sidebar {
-  width: var(--sidebar-width-expanded); /* Largeur par défaut (ouverte sur desktop) */
+  width: var(--sidebar-width-expanded); 
   height: 100vh;
   background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
   position: fixed;
@@ -30,7 +29,7 @@
 }
 
 .rma-sidebar.collapsed {
-  width: var(--sidebar-width-collapsed); /* Largeur réduite (fermée sur desktop) */
+  width: var(--sidebar-width-collapsed); 
 }
 
 .rma-sidebar-header {
@@ -363,20 +362,16 @@
 
 @media (max-width: 768px) {
   .rma-sidebar {
-    /* Sur mobile, la sidebar est cachée par défaut */
-    width: var(--sidebar-width-expanded); /* Conserve la largeur complète pour le slide-in */
-    transform: translateX(-100%); /* Cachée par défaut */
-    transition: transform 0.4s var(--transition-cubic-bezier); /* Transition pour l'ouverture/fermeture mobile */
+    width: var(--sidebar-width-expanded); 
+    transform: translateX(-100%); 
+    transition: transform 0.4s var(--transition-cubic-bezier); 
     box-shadow: 0 0 50px rgba(35, 69, 133, 0.3);
   }
 
   .rma-sidebar.mobile-open {
-    transform: translateX(0); /* Visible sur mobile */
+    transform: translateX(0);
   }
 
-  /* IMPORTANT : La règle .rma-sidebar.collapsed n'est plus nécessaire ici. */
-  /* Le comportement "fermée" sur mobile est géré par transform: translateX(-100%) sur .rma-sidebar */
-  /* et "ouverte" par .rma-sidebar.mobile-open. */
 }
 
 

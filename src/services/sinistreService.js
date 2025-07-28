@@ -1,66 +1,112 @@
-// 📁 src/services/sinistreService.js
 import { getAuthToken, setAuthToken, isTokenValid, clearAuthToken } from '../config/auth';
 
-const API_BASE_URL = 'http://localhost:9999/rest/api/v1/consultation/sinistres';
+const API_BASE_URL = 'http://localhost:8089/rest/api/v1/consultation/sinistres';
 
 class SinistreService {
   
   constructor() {
-    // ✅ Utilisation de la fonction centralisée au lieu de stocker le token localement
     this.token = getAuthToken();
     console.log('🚀 SinistreService initialisé avec token centralisé');
   }
 
-  /**
-   * Définit le token d'authentification
-   * ✅ Utilise maintenant la configuration centralisée
-   * @param {string} token - Token JWT à définir
-   */
+  
   setToken(token) {
     this.token = token;
-    setAuthToken(token); // ✅ Fonction centralisée
+    setAuthToken(token);
     console.log('🔑 Token défini:', token ? 'Oui' : 'Non');
   }
-async getEtatsSinistre() {
-  try {
-    console.log('📊 Récupération des états de sinistre...');
-    
-    const url = `${API_BASE_URL}/etats-sinistre`;
-    const response = await this.apiCall(url);
-    
-    console.log('✅ États de sinistre récupérés:', response.data);
-    
-    return response;
-  } catch (error) {
-    console.error('❌ Erreur récupération états de sinistre:', error);
-    
-    // Fallback en cas d'erreur - mêmes données que le backend
-    console.log('🔄 Utilisation des états de fallback');
-    return {
-      data: [
-        { code: '3', libelle: 'Rejeté' },
-        { code: '4', libelle: 'Réglé' },
-        { code: '6', libelle: 'En attente de complement d\'information' },
-        { code: '8', libelle: 'En attente de contre visite' },
-        { code: '11', libelle: 'En attente facture définitive' }
-      ],
-      message: 'États de sinistre (mode hors ligne)',
-      success: true
-    };
+
+  
+  async getEtatsSinistre() {
+    try {
+      console.log('📊 Récupération des états de sinistre avec gestion des accents...');
+      
+      const url = `${API_BASE_URL}/etats-sinistre`;
+      const response = await this.apiCall(url);
+      
+      console.log('✅ États de sinistre récupérés du backend:', response.data);
+      
+      if (response.data && Array.isArray(response.data)) {
+        response.data.forEach(etat => {
+          if (etat.libelle && etat.libelle.includes('complement')) {
+            console.log('🔍 État SANS accent trouvé:', etat);
+          }
+          if (etat.libelle && etat.libelle.includes('complément')) {
+            console.log('🔍 État AVEC accent trouvé:', etat);
+          }
+        });
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Erreur récupération états de sinistre:', error);
+      
+      console.log('🔄 Utilisation des états de fallback (libellés exacts BDD)');
+      return {
+        data: [
+          { code: '1', libelle: 'En cours de traitement' },
+          { code: '2', libelle: 'En attente de traitement' },
+          { code: '3', libelle: 'Rejeté' },
+          { code: '4', libelle: 'Réglé' },
+          { code: '5', libelle: 'Sans suite' },
+          { code: '6', libelle: 'En attente de complément d\'information' }, 
+          { code: '7', libelle: 'En attente de contrôle médical' },
+          { code: '8', libelle: 'En attente de contre visite' },
+          { code: '9', libelle: 'Réglé' },
+          { code: '10', libelle: 'Établissement de décompte en cours' },
+          { code: '11', libelle: 'En attente facture définitive' },
+          { code: '12', libelle: 'En attente de complément d\'information interne' }, 
+          { code: '13', libelle: 'En attente de contrôle médical systématique' },
+          { code: '14', libelle: 'Annulé' },
+          { code: '15', libelle: 'Accord réglé partiellement' },
+          { code: '16', libelle: 'Règlement annulé' },
+          { code: '17', libelle: 'En attente MAJ RIB Adhérent' },
+          { code: '18', libelle: 'En attente MAJ RIB Société' },
+          { code: '19', libelle: 'En attente MAJ Carte' },
+          { code: '20', libelle: 'Migré (à réouvrir)' }
+        ],
+        message: 'États de sinistre (mode hors ligne avec libellés exacts BDD)',
+        success: true
+      };
+    }
   }
-}
-  /**
-   * Récupère un token depuis Keycloak
-   * ✅ Mise à jour pour utiliser la configuration centralisée
-   * @param {string} username - Nom d'utilisateur
-   * @param {string} password - Mot de passe
-   * @returns {Promise<string>} Token d'accès
-   */
+
+ 
+  async getTypesDeclaration() {
+    try {
+      console.log('📋 Récupération des types de déclaration...');
+      
+      const url = `${API_BASE_URL}/types-declaration`;
+      const response = await this.apiCall(url);
+      
+      console.log('✅ Types de déclaration récupérés:', response.data);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Erreur récupération types de déclaration:', error);
+      
+      console.log('🔄 Utilisation des types de fallback');
+      return {
+        data: [
+          { code: '21', libelle: 'Déclaration de maladie' },
+          { code: '22', libelle: 'Déclaration de maternité' },
+          { code: '23', libelle: 'Déclaration d\'optique' },
+          { code: '29', libelle: 'Déclaration clinique hors convention' },
+          { code: '30', libelle: 'PEC Prestataire Santé' },
+          { code: '36', libelle: 'Déclaration Soins Dentaires' },
+          { code: '38', libelle: 'Devis SPD' }
+        ],
+        message: 'Types de déclaration (mode hors ligne)',
+        success: true
+      };
+    }
+  }
+
+  
   async getTokenFromKeycloak(username, password) {
     try {
       const tokenUrl = 'https://access-dy.rmaassurance.com/auth/realms/rma-ad/protocol/openid-connect/token';
       
-      // Validation des paramètres
       if (!username || !password) {
         throw new Error('Nom d\'utilisateur et mot de passe requis');
       }
@@ -84,12 +130,10 @@ async getEtatsSinistre() {
       if (response.ok) {
         const data = await response.json();
         
-        // ✅ Validation du token reçu
         if (!data.access_token) {
           throw new Error('Token d\'accès manquant dans la réponse');
         }
         
-        // ✅ Utilisation de la configuration centralisée
         this.setToken(data.access_token);
         console.log('✅ Authentification réussie');
         
@@ -110,19 +154,12 @@ async getEtatsSinistre() {
     }
   }
 
-  /**
-   * Effectue un appel API avec gestion centralisée de l'authentification
-   * ✅ Mis à jour pour utiliser la configuration centralisée
-   * @param {string} url - URL de l'API
-   * @param {object} options - Options de la requête
-   * @returns {Promise<object>} Réponse de l'API
-   */
   async apiCall(url, options = {}) {
     try {
       console.log('🌐 Appel API:', url);
       console.log('📤 Options:', options);
       
-      const currentToken = getAuthToken(); // ✅ Toujours le plus récent
+      const currentToken = getAuthToken();
       
       const headers = {
         'Content-Type': 'application/json',
@@ -130,7 +167,6 @@ async getEtatsSinistre() {
         ...options.headers
       };
 
-      // ✅ Validation et ajout du token avec gestion centralisée
       if (currentToken && isTokenValid(currentToken)) {
         headers['Authorization'] = `Bearer ${currentToken}`;
         console.log('🔑 Token valide ajouté aux headers (sinistres)');
@@ -151,7 +187,6 @@ async getEtatsSinistre() {
 
       console.log('📥 Réponse API status:', response.status);
 
-      // ✅ Gestion spécifique des erreurs d'authentification
       if (response.status === 401) {
         console.error('🚫 Erreur 401 - Token invalide ou expiré');
         clearAuthToken();
@@ -186,7 +221,6 @@ async getEtatsSinistre() {
       const apiResponse = await response.json();
       console.log('✅ ApiResponse reçue:', apiResponse);
       
-      // ✅ Validation de la réponse
       if (apiResponse.success === false) {
         throw new Error(apiResponse.message || 'Erreur inconnue');
       }
@@ -200,7 +234,6 @@ async getEtatsSinistre() {
     } catch (error) {
       console.error('❌ Erreur API:', error);
       
-      // ✅ Gestion spécifique des erreurs réseau
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
       }
@@ -209,27 +242,19 @@ async getEtatsSinistre() {
     }
   }
 
-  /**
-   * Formate une date pour le backend (DD/MM/YYYY)
-   * ✅ Amélioré avec plus de validations
-   * @param {string} dateStr - Date à formater
-   * @returns {string} Date formatée
-   */
+  
   formatDateForBackend(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return '';
     
     try {
       const trimmedDate = dateStr.trim();
       
-      // Format YYYY-MM-DD vers DD/MM/YYYY
       if (trimmedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = trimmedDate.split('-');
         return `${day}/${month}/${year}`;
       }
       
-      // Déjà au bon format DD/MM/YYYY
       if (trimmedDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        // Validation supplémentaire : vérifier que c'est une date valide
         const [day, month, year] = trimmedDate.split('/');
         const date = new Date(year, month - 1, day);
         if (date.getFullYear() == year && 
@@ -239,7 +264,6 @@ async getEtatsSinistre() {
         }
       }
       
-      // Tentative avec constructeur Date
       const date = new Date(trimmedDate);
       if (!isNaN(date.getTime())) {
         const day = String(date.getDate()).padStart(2, '0');
@@ -256,22 +280,15 @@ async getEtatsSinistre() {
     }
   }
 
-  /**
-   * Formate une date pour le frontend (YYYY-MM-DD)
-   * ✅ Amélioré avec plus de validations
-   * @param {string} dateStr - Date à formater
-   * @returns {string} Date formatée
-   */
+  
   formatDateForFrontend(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return '';
     
     try {
       const trimmedDate = dateStr.trim();
       
-      // Format DD/MM/YYYY vers YYYY-MM-DD
       if (trimmedDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         const [day, month, year] = trimmedDate.split('/');
-        // Validation de la date
         const date = new Date(year, month - 1, day);
         if (date.getFullYear() == year && 
             date.getMonth() == month - 1 && 
@@ -280,7 +297,6 @@ async getEtatsSinistre() {
         }
       }
       
-      // Déjà au bon format YYYY-MM-DD
       if (trimmedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return trimmedDate;
       }
@@ -293,11 +309,7 @@ async getEtatsSinistre() {
     }
   }
 
-  /**
-   * Teste la connexion à l'API
-   * ✅ Mis à jour pour utiliser la configuration centralisée
-   * @returns {Promise<object>} Résultat du test
-   */
+ 
   async testConnection() {
     try {
       console.log('🔧 Test de connexion...');
@@ -336,34 +348,45 @@ async getEtatsSinistre() {
     }
   }
 
-  // ✅ Validation d'entrée pour éviter les injections
   validateInput(input, fieldName, maxLength = 255) {
-    if (!input || typeof input !== 'string') {
-      throw new Error(`${fieldName} est obligatoire`);
-    }
+  if (!input || typeof input !== 'string') {
+    throw new Error(`${fieldName} est obligatoire`);
+  }
+  
+  const trimmedInput = input.trim();
+  if (trimmedInput.length === 0) {
+    throw new Error(`${fieldName} ne peut pas être vide`);
+  }
+  
+  if (trimmedInput.length > maxLength) {
+    throw new Error(`${fieldName} ne peut pas dépasser ${maxLength} caractères`);
+  }
+  
+  if (fieldName.toLowerCase().includes('état') || 
+      fieldName.toLowerCase().includes('sinistre') ||
+      fieldName.toLowerCase().includes('etat')) {
     
-    const trimmedInput = input.trim();
-    if (trimmedInput.length === 0) {
-      throw new Error(`${fieldName} ne peut pas être vide`);
-    }
+    console.log(`🔍 Validation spéciale pour état: "${trimmedInput}" (${fieldName})`);
     
-    if (trimmedInput.length > maxLength) {
-      throw new Error(`${fieldName} ne peut pas dépasser ${maxLength} caractères`);
-    }
-    
-    // Vérification des caractères dangereux
-    const dangerousChars = /[<>'";&\\]/;
-    if (dangerousChars.test(trimmedInput)) {
+    const etatSafeChars = /[<>";&\\]/; 
+    if (etatSafeChars.test(trimmedInput)) {
       throw new Error(`${fieldName} contient des caractères non autorisés`);
     }
     
+    console.log(`✅ Validation état réussie pour: "${trimmedInput}"`);
     return trimmedInput;
   }
-
+  
+  const dangerousChars = /[<>'";&\\]/; 
+  if (dangerousChars.test(trimmedInput)) {
+    throw new Error(`${fieldName} contient des caractères non autorisés`);
+  }
+  
+  return trimmedInput;
+}
   async rechercherParNumero(numSinistre, typeRecherche = 'EXACTE') {
     const validatedNumSinistre = this.validateInput(numSinistre, 'Le numéro de sinistre', 50);
     
-    // ✅ Validation du type de recherche
     const validTypes = ['EXACTE', 'CONTIENT', 'COMMENCE_PAR', 'SE_TERMINE_PAR'];
     if (!validTypes.includes(typeRecherche)) {
       typeRecherche = 'EXACTE';
@@ -379,7 +402,6 @@ async getEtatsSinistre() {
   }
 
   async rechercherParNomPrenom(nom, prenom, typeRecherche = 'CONTIENT') {
-    // ✅ Validation : au moins un des deux champs doit être renseigné
     const nomTrimmed = nom ? nom.trim() : '';
     const prenomTrimmed = prenom ? prenom.trim() : '';
     
@@ -397,7 +419,6 @@ async getEtatsSinistre() {
       params.append('prenom', prenomTrimmed);
     }
     
-    // ✅ Validation du type de recherche
     const validTypes = ['EXACTE', 'CONTIENT', 'COMMENCE_PAR', 'SE_TERMINE_PAR'];
     if (!validTypes.includes(typeRecherche)) {
       typeRecherche = 'CONTIENT';
@@ -411,10 +432,8 @@ async getEtatsSinistre() {
   async rechercherParNatureMaladie(natureMaladie, typeRecherche = 'CONTIENT', limit = 50) {
     const validatedNatureMaladie = this.validateInput(natureMaladie, 'La nature de maladie', 200);
     
-    // ✅ Validation de la limite
     const validatedLimit = Math.max(1, Math.min(parseInt(limit) || 50, 100));
     
-    // ✅ Validation du type de recherche
     const validTypes = ['EXACTE', 'CONTIENT', 'COMMENCE_PAR', 'SE_TERMINE_PAR'];
     if (!validTypes.includes(typeRecherche)) {
       typeRecherche = 'CONTIENT';
@@ -431,9 +450,20 @@ async getEtatsSinistre() {
   }
 
   async rechercherParEtat(etatSinistre, typeRecherche = 'EXACTE') {
-    const validatedEtat = this.validateInput(etatSinistre, 'L\'état du sinistre', 50);
+    const validatedEtat = this.validateInput(etatSinistre, 'L\'état du sinistre', 100);
     
-    // ✅ Validation du type de recherche
+    console.log('🔍 rechercherParEtat - État reçu:', `"${validatedEtat}"`);
+    console.log('🔍 rechercherParEtat - Longueur:', validatedEtat.length);
+    console.log('🔍 rechercherParEtat - Caractères détaillés:', [...validatedEtat].map(c => `${c}(${c.charCodeAt(0)})`));
+    console.log('🔍 rechercherParEtat - Type recherche:', typeRecherche);
+    
+    const hasAccents = /[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]/i.test(validatedEtat);
+    if (hasAccents) {
+      console.log('🔍 État avec accents détecté, le backend gérera automatiquement la normalisation');
+    } else {
+      console.log('🔍 État sans accents détecté, recherche directe');
+    }
+    
     const validTypes = ['EXACTE', 'CONTIENT', 'COMMENCE_PAR', 'SE_TERMINE_PAR'];
     if (!validTypes.includes(typeRecherche)) {
       typeRecherche = 'EXACTE';
@@ -445,11 +475,20 @@ async getEtatsSinistre() {
     });
 
     const url = `${API_BASE_URL}/etat?${params}`;
-    return await this.apiCall(url);
+    console.log('🔍 rechercherParEtat - URL finale:', url);
+    
+    try {
+      const response = await this.apiCall(url);
+      console.log('✅ rechercherParEtat - Résultats trouvés:', response.data?.length || 0);
+      return response;
+    } catch (error) {
+      console.error('❌ rechercherParEtat - Erreur:', error.message);
+      throw error;
+    }
   }
 
+  
   async rechercherCombine(criteres, typeRecherche = 'CONTIENT', limit = 50) {
-    // ✅ Validation et nettoyage des critères
     const criteresNettoyes = {};
     let hasValidCriteria = false;
 
@@ -474,24 +513,32 @@ async getEtatsSinistre() {
     }
     
     if (criteres.etatSinistre && criteres.etatSinistre.trim()) {
-      criteresNettoyes.etatSinistre = this.validateInput(criteres.etatSinistre, 'L\'état du sinistre', 50);
+      criteresNettoyes.etatSinistre = this.validateInput(criteres.etatSinistre, 'L\'état du sinistre', 100);
       hasValidCriteria = true;
+      
+      console.log('🔍 rechercherCombine - État reçu:', `"${criteresNettoyes.etatSinistre}"`);
+      console.log('🔍 rechercherCombine - Longueur état:', criteresNettoyes.etatSinistre.length);
+      console.log('🔍 rechercherCombine - Caractères état:', [...criteresNettoyes.etatSinistre].map(c => `${c}(${c.charCodeAt(0)})`));
+      
+      const hasAccents = /[àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]/i.test(criteresNettoyes.etatSinistre);
+      if (hasAccents) {
+        console.log('🔍 État avec accents détecté dans recherche combinée, gestion automatique');
+      } else {
+        console.log('🔍 État sans accents détecté dans recherche combinée');
+      }
     }
 
     if (!hasValidCriteria) {
       throw new Error('Au moins un critère de recherche doit être renseigné');
     }
 
-    // ✅ Validation de la limite
     const validatedLimit = Math.max(1, Math.min(parseInt(limit) || 50, 100));
     
-    // ✅ Validation du type de recherche
     const validTypes = ['EXACTE', 'CONTIENT', 'COMMENCE_PAR', 'SE_TERMINE_PAR'];
     const validatedTypeRecherche = validTypes.includes(typeRecherche) ? typeRecherche : 'CONTIENT';
 
     const params = new URLSearchParams();
     
-    // Ajout des critères validés
     Object.entries(criteresNettoyes).forEach(([key, value]) => {
       params.append(key, value);
     });
@@ -500,11 +547,19 @@ async getEtatsSinistre() {
     params.append('limit', validatedLimit.toString());
 
     const url = `${API_BASE_URL}/recherche-combinee?${params}`;
-    return await this.apiCall(url);
+    console.log('🔍 rechercherCombine - URL finale:', url);
+    
+    try {
+      const response = await this.apiCall(url);
+      console.log('✅ rechercherCombine - Résultats trouvés:', response.data?.length || 0);
+      return response;
+    } catch (error) {
+      console.error('❌ rechercherCombine - Erreur:', error.message);
+      throw error;
+    }
   }
 
   async creerSinistreSansLot(sinistreData) {
-    // ✅ Validation complète des données obligatoires
     const validatedData = {
       numPolice: this.validateInput(sinistreData.numPolice, 'Le numéro de police', 50),
       numAffiliation: this.validateInput(sinistreData.numAffiliation, 'Le numéro d\'affiliation', 50),
@@ -512,7 +567,6 @@ async getEtatsSinistre() {
       dateSurv: this.validateInput(sinistreData.dateSurv, 'La date de survenance', 10)
     };
 
-    // ✅ Validation et formatage de la date de survenance
     const formattedDateSurv = this.formatDateForBackend(validatedData.dateSurv);
     if (!formattedDateSurv) {
       throw new Error('Format de date de survenance invalide');
@@ -542,14 +596,12 @@ async getEtatsSinistre() {
   }
 
   async modifierSinistre(numeroSinistre, sinistreData) {
-    // ✅ Validation des données obligatoires
     const validatedNumeroSinistre = this.validateInput(numeroSinistre, 'Le numéro de sinistre', 50);
     const validatedCodeDecl = this.validateInput(sinistreData.codeDecl, 'Le type de déclaration', 10);
     const validatedDateSurv = this.validateInput(sinistreData.dateSurv, 'La date de survenance', 10);
 
     console.log('💾 Modification du sinistre - données reçues:', sinistreData);
 
-    // ✅ Formatage et validation des données optionnelles
     const dataToSend = {
       codeDecl: validatedCodeDecl,
       dateSurv: this.formatDateForBackend(validatedDateSurv),
@@ -581,7 +633,6 @@ async getEtatsSinistre() {
 
     console.log('🔍 Récupération des détails pour:', validatedNumSinistre);
     
-    // ✅ Tentative avec endpoint dédié
     try {
       const urlDetails = `${API_BASE_URL}/${encodeURIComponent(validatedNumSinistre)}/details`;
       console.log('🎯 Tentative avec endpoint /details:', urlDetails);
@@ -617,7 +668,6 @@ async getEtatsSinistre() {
       console.log('❌ Erreur avec /details:', error.message);
     }
     
-    // ✅ Fallback vers recherche par numéro
     try {
       console.log('🔄 Fallback vers recherche par numéro');
       const fallbackResponse = await this.rechercherParNumero(validatedNumSinistre, 'EXACTE');
@@ -644,42 +694,8 @@ async getEtatsSinistre() {
     
     throw new Error('Impossible de récupérer les détails du sinistre');
   }
-/**
- * Récupère tous les types de déclaration disponibles
- * @returns {Promise<object>} Liste des types de déclaration avec codes et libellés
- */
-async getTypesDeclaration() {
-  try {
-    console.log('📋 Récupération des types de déclaration...');
-    
-    const url = `${API_BASE_URL}/types-declaration`;
-    const response = await this.apiCall(url);
-    
-    console.log('✅ Types de déclaration récupérés:', response.data);
-    
-    return response;
-  } catch (error) {
-    console.error('❌ Erreur récupération types de déclaration:', error);
-    
-    // Fallback en cas d'erreur - mêmes données que le backend
-    console.log('🔄 Utilisation des types de fallback');
-    return {
-      data: [
-        { code: '21', libelle: 'Déclaration de maladie' },
-        { code: '22', libelle: 'Déclaration de maternité' },
-        { code: '23', libelle: 'Déclaration d\'optique' },
-        { code: '29', libelle: 'Déclaration clinique hors convention' },
-        { code: '30', libelle: 'PEC Prestataire Santé' },
-        { code: '36', libelle: 'Déclaration Soins Dentaires' },
-        { code: '38', libelle: 'Devis SPD' }
-      ],
-      message: 'Types de déclaration (mode hors ligne)',
-      success: true
-    };
-  }
-}
+
   async genererDocumentSinistre(numPolice, numFiliale, numAffiliation, numSinistre) {
-    // ✅ Validation de tous les paramètres
     const validatedParams = {
       numPolice: this.validateInput(numPolice, 'Le numéro de police', 50),
       numFiliale: this.validateInput(numFiliale, 'Le numéro de filiale', 50),
@@ -693,7 +709,6 @@ async getTypesDeclaration() {
       const url = `${API_BASE_URL}/${encodeURIComponent(validatedParams.numPolice)}/${encodeURIComponent(validatedParams.numFiliale)}/${encodeURIComponent(validatedParams.numAffiliation)}/${encodeURIComponent(validatedParams.numSinistre)}/document`;
       console.log('🌐 URL de génération:', url);
 
-      // ✅ Utilisation de la configuration centralisée pour l'authentification
       const currentToken = getAuthToken();
       if (!currentToken || !isTokenValid(currentToken)) {
         throw new Error('Authentification requise pour générer le document');
@@ -714,7 +729,6 @@ async getTypesDeclaration() {
 
       console.log('📥 Réponse génération PDF status:', response.status);
 
-      // ✅ Gestion spécifique des erreurs d'authentification
       if (response.status === 401) {
         clearAuthToken();
         throw new Error('Session expirée. Veuillez vous reconnecter.');
@@ -744,7 +758,6 @@ async getTypesDeclaration() {
         throw new Error('Le document généré est vide');
       }
 
-      // ✅ Validation du type MIME
       if (blob.type && !blob.type.includes('pdf')) {
         console.warn('⚠️ Type MIME inattendu:', blob.type);
       }
@@ -762,15 +775,9 @@ async getTypesDeclaration() {
     }
   }
 
-  /**
-   * Télécharge un blob en tant que fichier
-   * ✅ Amélioré avec gestion d'erreurs
-   * @param {Blob} blob - Blob à télécharger
-   * @param {string} filename - Nom du fichier
-   */
+  
   downloadBlob(blob, filename) {
     try {
-      // ✅ Validation des paramètres
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Blob invalide pour le téléchargement');
       }
@@ -779,10 +786,8 @@ async getTypesDeclaration() {
         filename = 'document.pdf';
       }
       
-      // ✅ Nettoyage du nom de fichier
       const cleanFilename = filename.replace(/[<>:"/\\|?*]/g, '_');
       
-      // ✅ Vérification de la taille du blob
       if (blob.size === 0) {
         throw new Error('Le fichier est vide');
       }
@@ -793,12 +798,11 @@ async getTypesDeclaration() {
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = cleanFilename;
-      link.style.display = 'none'; // ✅ Cacher le lien
+      link.style.display = 'none';
       
       document.body.appendChild(link);
       link.click();
       
-      // ✅ Nettoyage après téléchargement
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
@@ -811,18 +815,22 @@ async getTypesDeclaration() {
     }
   }
 
-  /**
-   * Gère les erreurs API avec messages contextuels
-   * ✅ Amélioré avec plus de cas d'erreurs
-   * @param {Error} error - Erreur à traiter
-   * @returns {string} Message d'erreur formaté
-   */
+  
   handleAPIError(error) {
     const message = error?.message || '';
     
     console.log('🚨 Gestion de l\'erreur:', message);
     
-    // ✅ Erreurs de validation des champs
+    if (message.includes('accent') || message.includes('caractère spécial')) {
+      return 'Erreur de traitement des caractères spéciaux. La recherche supporte les accents automatiquement.';
+    }
+    if (message.includes('complement') || message.includes('complément')) {
+      return 'Erreur lors de la recherche avec le terme "complément". La recherche fonctionne avec ou sans accent.';
+    }
+    if (message.includes('normalisation') || message.includes('encoding')) {
+      return 'Erreur d\'encodage des caractères. Réessayez avec des termes plus simples.';
+    }
+    
     if (message.includes('contient des caractères non autorisés')) {
       return 'Caractères spéciaux non autorisés dans les champs de saisie';
     }
@@ -833,7 +841,6 @@ async getTypesDeclaration() {
       return message;
     }
     
-    // ✅ Erreurs d'authentification
     if (message.includes('Session expirée') || message.includes('Authentification requise')) {
       return message;
     }
@@ -844,47 +851,13 @@ async getTypesDeclaration() {
       return 'Vous n\'avez pas les permissions nécessaires pour cette opération';
     }
     
-    // ✅ Erreurs de modification de sinistre
-    if (message.includes('ne peut pas être modifié car il est dans l\'état')) {
-      return message; 
+    if (message.includes('Aucun sinistre trouvé') && message.includes('état')) {
+      return 'Aucun sinistre trouvé pour cet état. La recherche fonctionne avec ou sans accents.';
     }
-    if (message.includes('Seule la réouverture est possible')) {
-      return message; 
-    }
-    if (message.includes('consultation uniquement autorisée')) {
-      return message; 
-    }
-    if (message.includes('Le type de déclaration ne peut pas être modifié pour un sinistre')) {
-      return message;
-    }
-    if (message.includes('La date de survenance ne peut pas être modifiée pour un sinistre')) {
-      return message;
-    }
-    if (message.includes('Le montant des frais engagés ne peut pas être modifié pour un sinistre')) {
-      return message; 
-    }
-    if (message.includes('La référence externe ne peut pas être modifiée pour un sinistre')) {
-      return message; 
-    }
-    if (message.includes('La nature de la maladie ne peut pas être modifiée pour un sinistre')) {
-      return message; 
+    if (message.includes('État du sinistre') && message.includes('obligatoire')) {
+      return 'L\'état du sinistre est obligatoire pour cette recherche.';
     }
     
-    // ✅ Erreurs de génération de documents
-    if (message.includes('Aucune édition disponible pour l\'état du sinistre')) {
-      return 'Aucun document disponible pour cet état de sinistre. États supportés: REGLE, REJETE, EN_ATTENTE_FACTURE_DEFINITIVE, EN_ATTENTE_COMPLEMENT_INFORMATION, EN_ATTENTE_CONTRE_VISITE';
-    }
-    if (message.includes('Impossible de générer le document')) {
-      return message;
-    }
-    if (message.includes('Le document généré est vide')) {
-      return 'Le document généré est vide. Vérifiez les paramètres et réessayez.';
-    }
-    if (message.includes('Blob invalide')) {
-      return 'Erreur lors de la génération du document. Veuillez réessayer.';
-    }
-    
-    // ✅ Erreurs de recherche
     if (message.includes('Sinistre non trouvé')) {
       return 'Sinistre non trouvé. Vérifiez les paramètres (police, filiale, affiliation, numéro sinistre)';
     }
@@ -892,7 +865,7 @@ async getTypesDeclaration() {
       return 'Au moins un critère de recherche doit être renseigné';
     }
     if (message.includes('Aucun sinistre trouvé')) {
-      return 'Aucun résultat trouvé pour les critères spécifiés';
+      return 'Aucun résultat trouvé pour les critères spécifiés. Essayez avec le type "CONTIENT" ou vérifiez l\'orthographe.';
     }
     if (message.includes('Type de recherche invalide')) {
       return 'Type de recherche invalide. Utilisez: EXACTE, CONTIENT, COMMENCE_PAR, SE_TERMINE_PAR';
@@ -901,7 +874,6 @@ async getTypesDeclaration() {
       return 'Assuré non trouvé avec ce numéro d\'affiliation';
     }
     
-    // ✅ Erreurs de validation obligatoire
     if (message.includes('obligatoire')) {
       return message; 
     }
@@ -909,18 +881,13 @@ async getTypesDeclaration() {
       return 'Format de date invalide. Utilisez le format DD/MM/YYYY ou YYYY-MM-DD';
     }
     
-    // ✅ Erreurs techniques
     if (message.includes('Erreur technique')) {
       return message; 
     }
     if (message.includes('Erreur lors de')) {
       return message; 
     }
-    if (message.includes('Token d\'accès manquant')) {
-      return 'Erreur d\'authentification. Veuillez vous reconnecter.';
-    }
     
-    // ✅ Erreurs réseau et de connectivité
     if (message.includes('CORS')) {
       return 'Erreur de connexion au serveur. Vérifiez la configuration CORS.';
     }
@@ -934,15 +901,16 @@ async getTypesDeclaration() {
       return 'Délai d\'attente dépassé. Le serveur met trop de temps à répondre.';
     }
     
-    // ✅ Erreurs de fichier et téléchargement
-    if (message.includes('Erreur lors du téléchargement')) {
+    if (message.includes('Aucune édition disponible pour l\'état du sinistre')) {
+      return 'Aucun document disponible pour cet état de sinistre. États supportés: REGLE, REJETE, EN_ATTENTE_FACTURE_DEFINITIVE, EN_ATTENTE_COMPLEMENT_INFORMATION, EN_ATTENTE_CONTRE_VISITE';
+    }
+    if (message.includes('Impossible de générer le document')) {
       return message;
     }
-    if (message.includes('Le fichier est vide')) {
-      return 'Le fichier généré est vide';
+    if (message.includes('Le document généré est vide')) {
+      return 'Le document généré est vide. Vérifiez les paramètres et réessayez.';
     }
     
-    // ✅ Erreurs Keycloak spécifiques
     if (message.includes('invalid_grant')) {
       return 'Nom d\'utilisateur ou mot de passe incorrect';
     }
@@ -953,39 +921,31 @@ async getTypesDeclaration() {
       return 'Échec de l\'authentification. Vérifiez vos identifiants.';
     }
     
-    // ✅ Message par défaut avec plus de contexte
     if (message.length > 0) {
       return message;
     }
     
-    return 'Une erreur inattendue s\'est produite. Veuillez réessayer ou contacter le support technique.';
+    return 'Une erreur inattendue s\'est produite. La recherche supporte automatiquement les accents. Veuillez réessayer ou contacter le support technique.';
   }
 
-  /**
-   * Récupère des statistiques sur l'état du service
-   * ✅ Nouvelle méthode utilitaire
-   * @returns {object} Statistiques du service
-   */
+ 
   getServiceStats() {
     const currentToken = getAuthToken();
     return {
       hasToken: !!currentToken,
       tokenValid: currentToken ? isTokenValid(currentToken) : false,
       apiBaseUrl: API_BASE_URL,
+      supportsAccents: true, 
+      accentNormalization: 'automatic', 
       timestamp: new Date().toISOString()
     };
   }
 
-  /**
-   * Nettoie les ressources du service
-   * ✅ Nouvelle méthode pour le nettoyage
-   */
+ 
   cleanup() {
     console.log('🧹 Nettoyage du SinistreService');
     this.token = null;
-    // Pas de clearAuthToken() ici car d'autres services peuvent l'utiliser
   }
 }
 
-// ✅ Export d'une instance singleton
 export default new SinistreService();

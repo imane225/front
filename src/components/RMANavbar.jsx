@@ -14,7 +14,6 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
     }
   };
 
-  // Fermer le menu utilisateur quand on clique ailleurs
   const handleOverlayClick = () => {
     setUserMenuOpen(false);
   };
@@ -44,14 +43,11 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
             </div>
 
             <div className="rma-navbar-actions">
-              {/* Cloche notification */}
               <button className="rma-navbar-button" title="Notifications">
                 <Bell size={18} />
-                {/* Badge de notification (optionnel) */}
                 <div className="rma-navbar-button-badge"></div>
               </button>
 
-              {/* Menu utilisateur */}
               <div className="rma-navbar-user-menu">
                 <button 
                   className="rma-navbar-user-button"
@@ -102,7 +98,6 @@ const RMANavbar = ({ isSidebarCollapsed = false }) => {
         </div>
       </nav>
 
-      {/* Overlay pour fermer le menu en cliquant ailleurs */}
       {userMenuOpen && (
         <div 
           className={`rma-navbar-overlay ${userMenuOpen ? 'show' : ''}`}
