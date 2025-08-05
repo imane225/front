@@ -1,21 +1,15 @@
-import { getAuthToken, setAuthToken, isTokenValid, clearAuthToken } from '../config/auth';
+
 
 const API_BASE_URL = 'http://localhost:8089/rest/api/v1/consultation/sinistres';
 
 class SinistreService {
   
   constructor() {
-    this.token = getAuthToken();
-    console.log('🚀 SinistreService initialisé avec token centralisé');
+    
+    console.log('🚀 SinistreService initialisé avec authentification Keycloak');
   }
 
-  
-  setToken(token) {
-    this.token = token;
-    setAuthToken(token);
-    console.log('🔑 Token défini:', token ? 'Oui' : 'Non');
-  }
-
+ 
   
   async getEtatsSinistre() {
     try {
@@ -71,7 +65,6 @@ class SinistreService {
     }
   }
 
- 
   async getTypesDeclaration() {
     try {
       console.log('📋 Récupération des types de déclaration...');
@@ -103,63 +96,29 @@ class SinistreService {
   }
 
   
-  async getTokenFromKeycloak(username, password) {
-    try {
-      const tokenUrl = 'https://access-dy.rmaassurance.com/auth/realms/rma-ad/protocol/openid-connect/token';
-      
-      if (!username || !password) {
-        throw new Error('Nom d\'utilisateur et mot de passe requis');
-      }
-
-      const formData = new URLSearchParams();
-      formData.append('grant_type', 'password');
-      formData.append('client_id', 'novas');
-      formData.append('username', username.trim());
-      formData.append('password', password);
-      
-      console.log('🔐 Tentative d\'authentification pour:', username);
-      
-      const response = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (!data.access_token) {
-          throw new Error('Token d\'accès manquant dans la réponse');
-        }
-        
-        this.setToken(data.access_token);
-        console.log('✅ Authentification réussie');
-        
-        return data.access_token;
-      } else {
-        let errorMessage = 'Authentification échouée';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error_description || errorData.error || errorMessage;
-        } catch {
-          errorMessage = `Erreur ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
-      }
-    } catch (error) {
-      console.error('❌ Erreur d\'authentification:', error);
-      throw error;
-    }
-  }
-
   async apiCall(url, options = {}) {
     try {
       console.log('🌐 Appel API:', url);
       console.log('📤 Options:', options);
       
-      const currentToken = getAuthToken();
+      
+      const keycloak = window.keycloak || (await import('../config/keycloak')).keycloak;
+      
+      if (!keycloak) {
+        throw new Error('Keycloak non initialisé');
+      }
+
+      if (keycloak.isTokenExpired(30)) {
+        console.log('🔄 Token expirant, refresh automatique...');
+        try {
+          await keycloak.updateToken(30);
+          console.log('✅ Token refreshé avec succès');
+        } catch (refreshError) {
+          console.error('❌ Échec du refresh token:', refreshError);
+          keycloak.login();
+          return;
+        }
+      }
       
       const headers = {
         'Content-Type': 'application/json',
@@ -167,15 +126,11 @@ class SinistreService {
         ...options.headers
       };
 
-      if (currentToken && isTokenValid(currentToken)) {
-        headers['Authorization'] = `Bearer ${currentToken}`;
-        console.log('🔑 Token valide ajouté aux headers (sinistres)');
-      } else if (currentToken) {
-        console.warn('⚠️ Token expiré détecté (sinistres) - Suppression');
-        clearAuthToken();
-        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      if (keycloak.authenticated && keycloak.token) {
+        headers['Authorization'] = `Bearer ${keycloak.token}`;
+        console.log('🔑 Token Keycloak ajouté aux headers');
       } else {
-        console.warn('⚠️ Aucun token disponible pour l\'authentification');
+        console.warn('⚠️ Utilisateur non authentifié');
         throw new Error('Authentification requise. Veuillez vous connecter.');
       }
       
@@ -189,8 +144,8 @@ class SinistreService {
 
       if (response.status === 401) {
         console.error('🚫 Erreur 401 - Token invalide ou expiré');
-        clearAuthToken();
-        throw new Error('Session expirée. Veuillez vous reconnecter.');
+        keycloak.login();
+        return;
       }
 
       if (response.status === 403) {
@@ -242,7 +197,6 @@ class SinistreService {
     }
   }
 
-  
   formatDateForBackend(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return '';
     
@@ -280,7 +234,6 @@ class SinistreService {
     }
   }
 
-  
   formatDateForFrontend(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return '';
     
@@ -309,18 +262,18 @@ class SinistreService {
     }
   }
 
- 
   async testConnection() {
     try {
       console.log('🔧 Test de connexion...');
       
-      const currentToken = getAuthToken();
+      const keycloak = window.keycloak || (await import('../config/keycloak')).keycloak;
+      
       const headers = {
         'Content-Type': 'application/json'
       };
       
-      if (currentToken && isTokenValid(currentToken)) {
-        headers['Authorization'] = `Bearer ${currentToken}`;
+      if (keycloak && keycloak.authenticated && keycloak.token) {
+        headers['Authorization'] = `Bearer ${keycloak.token}`;
       }
       
       const response = await fetch(`${API_BASE_URL}/nom-prenom?nom=TEST`, {
@@ -334,56 +287,57 @@ class SinistreService {
       return { 
         success: response.status < 500, 
         status: response.status, 
-        hasToken: !!currentToken,
-        tokenValid: currentToken ? isTokenValid(currentToken) : false
+        hasToken: !!(keycloak && keycloak.token),
+        tokenValid: keycloak ? !keycloak.isTokenExpired() : false
       };
     } catch (error) {
       console.error('❌ Erreur de connexion:', error);
       return { 
         success: false, 
         error: error.message, 
-        hasToken: !!getAuthToken(),
+        hasToken: false,
         tokenValid: false
       };
     }
   }
 
   validateInput(input, fieldName, maxLength = 255) {
-  if (!input || typeof input !== 'string') {
-    throw new Error(`${fieldName} est obligatoire`);
-  }
-  
-  const trimmedInput = input.trim();
-  if (trimmedInput.length === 0) {
-    throw new Error(`${fieldName} ne peut pas être vide`);
-  }
-  
-  if (trimmedInput.length > maxLength) {
-    throw new Error(`${fieldName} ne peut pas dépasser ${maxLength} caractères`);
-  }
-  
-  if (fieldName.toLowerCase().includes('état') || 
-      fieldName.toLowerCase().includes('sinistre') ||
-      fieldName.toLowerCase().includes('etat')) {
+    if (!input || typeof input !== 'string') {
+      throw new Error(`${fieldName} est obligatoire`);
+    }
     
-    console.log(`🔍 Validation spéciale pour état: "${trimmedInput}" (${fieldName})`);
+    const trimmedInput = input.trim();
+    if (trimmedInput.length === 0) {
+      throw new Error(`${fieldName} ne peut pas être vide`);
+    }
     
-    const etatSafeChars = /[<>";&\\]/; 
-    if (etatSafeChars.test(trimmedInput)) {
+    if (trimmedInput.length > maxLength) {
+      throw new Error(`${fieldName} ne peut pas dépasser ${maxLength} caractères`);
+    }
+    
+    if (fieldName.toLowerCase().includes('état') || 
+        fieldName.toLowerCase().includes('sinistre') ||
+        fieldName.toLowerCase().includes('etat')) {
+      
+      console.log(`🔍 Validation spéciale pour état: "${trimmedInput}" (${fieldName})`);
+      
+      const etatSafeChars = /[<>";&\\]/; 
+      if (etatSafeChars.test(trimmedInput)) {
+        throw new Error(`${fieldName} contient des caractères non autorisés`);
+      }
+      
+      console.log(`✅ Validation état réussie pour: "${trimmedInput}"`);
+      return trimmedInput;
+    }
+    
+    const dangerousChars = /[<>'";&\\]/; 
+    if (dangerousChars.test(trimmedInput)) {
       throw new Error(`${fieldName} contient des caractères non autorisés`);
     }
     
-    console.log(`✅ Validation état réussie pour: "${trimmedInput}"`);
     return trimmedInput;
   }
-  
-  const dangerousChars = /[<>'";&\\]/; 
-  if (dangerousChars.test(trimmedInput)) {
-    throw new Error(`${fieldName} contient des caractères non autorisés`);
-  }
-  
-  return trimmedInput;
-}
+
   async rechercherParNumero(numSinistre, typeRecherche = 'EXACTE') {
     const validatedNumSinistre = this.validateInput(numSinistre, 'Le numéro de sinistre', 50);
     
@@ -487,7 +441,6 @@ class SinistreService {
     }
   }
 
-  
   async rechercherCombine(criteres, typeRecherche = 'CONTIENT', limit = 50) {
     const criteresNettoyes = {};
     let hasValidCriteria = false;
@@ -709,17 +662,30 @@ class SinistreService {
       const url = `${API_BASE_URL}/${encodeURIComponent(validatedParams.numPolice)}/${encodeURIComponent(validatedParams.numFiliale)}/${encodeURIComponent(validatedParams.numAffiliation)}/${encodeURIComponent(validatedParams.numSinistre)}/document`;
       console.log('🌐 URL de génération:', url);
 
-      const currentToken = getAuthToken();
-      if (!currentToken || !isTokenValid(currentToken)) {
+      const keycloak = window.keycloak || (await import('../config/keycloak')).keycloak;
+      
+      if (!keycloak || !keycloak.authenticated || !keycloak.token) {
         throw new Error('Authentification requise pour générer le document');
+      }
+
+      if (keycloak.isTokenExpired(30)) {
+        console.log('🔄 Token expirant, refresh avant génération PDF...');
+        try {
+          await keycloak.updateToken(30);
+          console.log('✅ Token refreshé pour PDF');
+        } catch (refreshError) {
+          console.error('❌ Échec du refresh token pour PDF:', refreshError);
+          keycloak.login();
+          return;
+        }
       }
 
       const headers = {
         'Accept': 'application/pdf',
-        'Authorization': `Bearer ${currentToken}`
+        'Authorization': `Bearer ${keycloak.token}`
       };
 
-      console.log('🔑 Token ajouté pour la génération PDF');
+      console.log('🔑 Token Keycloak ajouté pour la génération PDF');
 
       const response = await fetch(url, {
         method: 'GET',
@@ -730,8 +696,9 @@ class SinistreService {
       console.log('📥 Réponse génération PDF status:', response.status);
 
       if (response.status === 401) {
-        clearAuthToken();
-        throw new Error('Session expirée. Veuillez vous reconnecter.');
+        console.error('🚫 Erreur 401 pour PDF - Token invalide');
+        keycloak.login();
+        return;
       }
 
       if (!response.ok) {
@@ -775,7 +742,6 @@ class SinistreService {
     }
   }
 
-  
   downloadBlob(blob, filename) {
     try {
       if (!blob || !(blob instanceof Blob)) {
@@ -815,7 +781,6 @@ class SinistreService {
     }
   }
 
-  
   handleAPIError(error) {
     const message = error?.message || '';
     
@@ -928,23 +893,22 @@ class SinistreService {
     return 'Une erreur inattendue s\'est produite. La recherche supporte automatiquement les accents. Veuillez réessayer ou contacter le support technique.';
   }
 
- 
   getServiceStats() {
-    const currentToken = getAuthToken();
+    const keycloak = window.keycloak;
     return {
-      hasToken: !!currentToken,
-      tokenValid: currentToken ? isTokenValid(currentToken) : false,
+      hasToken: !!(keycloak && keycloak.token),
+      tokenValid: keycloak ? !keycloak.isTokenExpired() : false,
+      authenticated: keycloak ? keycloak.authenticated : false,
       apiBaseUrl: API_BASE_URL,
       supportsAccents: true, 
       accentNormalization: 'automatic', 
+      authSystem: 'Keycloak',
       timestamp: new Date().toISOString()
     };
   }
 
- 
   cleanup() {
     console.log('🧹 Nettoyage du SinistreService');
-    this.token = null;
   }
 }
 

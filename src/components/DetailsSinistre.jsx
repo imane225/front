@@ -46,43 +46,45 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
   });
   const [isGeneratingDocument, setIsGeneratingDocument] = useState(false);
 
- const DOCUMENT_BUTTONS = {
-  "3": { 
-    label: "Lettre de rejet", 
-    icon: FileX, 
-    color: "bg-[#D32F2F]", 
-    hoverColor: "bg-[#B71C1C]", 
-    type: "REJET" 
-  },
-  "4": { 
-    label: "Décompte", 
-    icon: FileCheck, 
-    color: "bg-[#388E3C]", 
-    hoverColor: "bg-[#2E7D32]", 
-    type: "DECOMPTE" 
-  },
-  "6": { 
-    label: "Lettre complement", 
-    icon: FileQuestion, 
-    color: "bg-[#FB8C00]", 
-    hoverColor: "bg-[#F57C00]", 
-    type: "COMPLEMENT" 
-  },
-  "8": { 
-    label: "Convocation CV", 
-    icon: Stethoscope, 
-    color: "bg-[#7B1FA2]", 
-    hoverColor: "bg-[#6A1B9A]", 
-    type: "CONTRE_VISITE" 
-  },
-  "11": { 
-    label: "Lettre d'accord", 
-    icon: CheckCircle, 
-    color: "bg-[#1976D2]", 
-    hoverColor: "bg-[#1565C0]", 
-    type: "ACCORD" 
-  }
-};
+  const ETATS_NON_MODIFIABLES = ['Rejeté', 'Réglé', 'Sans suite', 'Annulé', 'Migré (à réouvrir)'];
+
+  const DOCUMENT_BUTTONS = {
+    "3": { 
+      label: "Lettre de rejet", 
+      icon: FileX, 
+      color: "bg-[#D32F2F]", 
+      hoverColor: "bg-[#B71C1C]", 
+      type: "REJET" 
+    },
+    "4": { 
+      label: "Décompte", 
+      icon: FileCheck, 
+      color: "bg-[#388E3C]", 
+      hoverColor: "bg-[#2E7D32]", 
+      type: "DECOMPTE" 
+    },
+    "6": { 
+      label: "Lettre complement", 
+      icon: FileQuestion, 
+      color: "bg-[#FB8C00]", 
+      hoverColor: "bg-[#F57C00]", 
+      type: "COMPLEMENT" 
+    },
+    "8": { 
+      label: "Convocation CV", 
+      icon: Stethoscope, 
+      color: "bg-[#7B1FA2]", 
+      hoverColor: "bg-[#6A1B9A]", 
+      type: "CONTRE_VISITE" 
+    },
+    "11": { 
+      label: "Lettre d'accord", 
+      icon: CheckCircle, 
+      color: "bg-[#1976D2]", 
+      hoverColor: "bg-[#1565C0]", 
+      type: "ACCORD" 
+    }
+  };
 
   useEffect(() => {
     const loadSinistreDetails = async () => {
@@ -115,6 +117,13 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
 
   const handleModifier = () => {
     navigate(`/consultation/sinistres/${numSinistre}/modifier`);
+  };
+
+  const canModifySinistre = () => {
+    if (!sinistreDetails) return false;
+    
+    const etatLibelle = sinistreDetails.etatSinistreLibelle;
+    return !ETATS_NON_MODIFIABLES.includes(etatLibelle);
   };
 
   const handleGenerateDocument = async () => {
@@ -377,10 +386,12 @@ const DetailsSinistre = ({ sidebarCollapsed = false }) => {
         <div className="header-actions">
           {getDocumentButton()}
           
-          <button onClick={handleModifier} className="btn btn-primary">
-            <Edit className="btn-icon" />
-            Modifier
-          </button>
+          {canModifySinistre() && (
+            <button onClick={handleModifier} className="btn btn-primary">
+              <Edit className="btn-icon" />
+              Modifier
+            </button>
+          )}
           
           <button onClick={handleBack} className="btn btn-secondary">
             <ArrowLeft className="btn-icon" />

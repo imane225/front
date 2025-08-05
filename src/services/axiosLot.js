@@ -1,6 +1,4 @@
 import axios from 'axios';
-import { getAuthToken, isTokenValid, clearAuthToken } from '../config/auth';
-
 
 const api = axios.create({
   baseURL: 'http://localhost:8089/rest/api/lots',
@@ -11,23 +9,36 @@ const api = axios.create({
   }
 });
 
-
 api.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken();
-    
-    if (token && isTokenValid(token)) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-      console.log('🔑 Token valide ajouté à la requête (lots)');
-    } else if (token) {
-      console.warn('⚠️ Token expiré détecté (lots) - Suppression du localStorage');
-      clearAuthToken();
-    } else {
-      console.warn('⚠️ Aucun token disponible pour la requête (lots)');
+  async (config) => {
+    try {
+      const keycloak = window.keycloak || (await import('../config/keycloak')).keycloak;
+      
+      if (keycloak && keycloak.authenticated) {
+        if (keycloak.isTokenExpired(30)) {
+          console.log('🔄 Token expirant, refresh automatique (lots)...');
+          try {
+            await keycloak.updateToken(30);
+            console.log('✅ Token refreshé avec succès (lots)');
+          } catch (refreshError) {
+            console.error('❌ Échec du refresh token (lots):', refreshError);
+            keycloak.login();
+            return Promise.reject(new Error('Token refresh failed'));
+          }
+        }
+        
+        if (keycloak.token) {
+          config.headers['Authorization'] = `Bearer ${keycloak.token}`;
+          console.log('🔑 Token Keycloak ajouté à la requête (lots)');
+        }
+      } else {
+        console.warn('⚠️ Utilisateur non authentifié (lots)');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la récupération du token Keycloak (lots):', error);
     }
     
     config.headers['Content-Type'] = 'application/json';
-    
     console.log(`🌐 Requête ${config.method?.toUpperCase()} vers: ${config.url}`);
     
     return config;
@@ -38,20 +49,26 @@ api.interceptors.request.use(
   }
 );
 
-
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ Réponse reçue (lots): ${response.status}`);
     return response;
   },
-  (error) => {
+  async (error) => {
     if (error.response) {
       const { status, data } = error.response;
       
       switch (status) {
         case 401:
           console.error('🚫 Erreur d\'authentification (lots) - Token invalide ou expiré');
-          clearAuthToken();
+          try {
+            const keycloak = window.keycloak || (await import('../config/keycloak')).keycloak;
+            if (keycloak) {
+              keycloak.login();
+            }
+          } catch (keycloakError) {
+            console.error('❌ Erreur lors de la redirection vers Keycloak:', keycloakError);
+          }
           break;
         case 403:
           console.error('🚫 Accès interdit (lots) - Permissions insuffisantes');
@@ -75,7 +92,6 @@ api.interceptors.response.use(
   }
 );
 
-
 export const getAllLots = async (params = {}) => {
   try {
     const response = await api.get('/', { params });
@@ -95,7 +111,6 @@ export const getLotById = async (lotId) => {
     throw error;
   }
 };
-
 
 export const createLot = async (lotData) => {
   try {
@@ -118,7 +133,6 @@ export const getLotsByGestionnaire = async (gestionnaire) => {
   }
 };
 
-
 export const updateLot = async (lotId, lotData) => {
   try {
     const response = await api.put(`/${lotId}`, lotData);
@@ -129,7 +143,6 @@ export const updateLot = async (lotId, lotData) => {
     throw error;
   }
 };
-
 
 export const deleteLot = async (lotId) => {
   try {

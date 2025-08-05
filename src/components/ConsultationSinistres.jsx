@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useKeycloak } from '@react-keycloak/web';
 import { 
   Search, 
   RefreshCw, 
@@ -13,50 +14,20 @@ import {
   Calendar,
   ClipboardList  
 } from 'lucide-react';
-import { getAuthToken, getUserInfoFromToken } from '../config/auth';
+import { getToken, getUserInfo,  } from '../config/keycloak';
 import SinistreService from '../services/sinistreService';
 import './ConsultationSinistres.css';
 
 const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
+  const { keycloak, initialized } = useKeycloak();
+  const navigate = useNavigate();
   
   const [userInfo, setUserInfo] = useState(null);
+  const [isAppReady, setIsAppReady] = useState(false);
+  
   const [etatsSinistre, setEtatsSinistre] = useState([]);
   const [loadingEtats, setLoadingEtats] = useState(true);
   
-  useEffect(() => {
-    const currentToken = getAuthToken();
-    if (currentToken) {
-      SinistreService.setToken(currentToken);
-      
-      const userData = getUserInfoFromToken(currentToken);
-      if (userData) {
-        setUserInfo(userData);
-        console.log('👤 Utilisateur connecté:', userData.name || userData.username);
-      }
-      
-      console.log('🔑 Token centralisé chargé pour les sinistres');
-    } else {
-      console.warn('⚠️ Aucun token disponible pour l\'authentification');
-    }
-  }, []); 
-
-  useEffect(() => {
-    const loadEtatsSinistre = async () => {
-      try {
-        setLoadingEtats(true);
-        const response = await SinistreService.getEtatsSinistre();
-        setEtatsSinistre(response.data);
-        console.log('✅ États de sinistre chargés:', response.data);
-      } catch (error) {
-        console.error('Erreur chargement états:', error);
-      } finally {
-        setLoadingEtats(false);
-      }
-    };
-
-    loadEtatsSinistre();
-  }, []);
-
   const [activeTab, setActiveTab] = useState('recherche-sinistre');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,7 +46,71 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     typeRecherche: 'EXACTE'
   });
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    const initializeApp = async () => {
+      console.log('🔄 Initialisation de l\'application...');
+      console.log('Keycloak initialized:', initialized);
+      console.log('Keycloak authenticated:', keycloak?.authenticated);
+      
+      if (!initialized) {
+        console.log('⏳ En attente de l\'initialisation de Keycloak...');
+        return;
+      }
+
+      if (!keycloak?.authenticated) {
+        console.log('❌ Utilisateur non authentifié');
+        setIsAppReady(true);
+        return;
+      }
+
+      try {
+        console.log('✅ Keycloak initialisé et utilisateur authentifié');
+        
+        const userData = getUserInfo();
+        if (userData) {
+          setUserInfo(userData);
+          console.log('👤 Utilisateur connecté:', userData.username || userData.fullName);
+        }
+
+        setIsAppReady(true);
+        
+        console.log('🔑 Application initialisée avec succès');
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'initialisation:', error);
+        setError('Erreur lors de l\'initialisation de l\'application');
+        setIsAppReady(true);
+      }
+    };
+
+    initializeApp();
+  }, [initialized, keycloak?.authenticated]);
+
+  useEffect(() => {
+    const loadEtatsSinistre = async () => {
+      if (!isAppReady || !keycloak?.authenticated) {
+        console.log('⏳ Application non prête ou utilisateur non authentifié');
+        return;
+      }
+
+      try {
+        setLoadingEtats(true);
+        console.log('🔄 Chargement des états de sinistre...');
+        
+        const response = await SinistreService.getEtatsSinistre();
+        const etatsData = response.data || response || [];
+        
+        setEtatsSinistre(etatsData);
+        console.log('✅ États de sinistre chargés:', etatsData.length, 'états');
+      } catch (error) {
+        console.error('❌ Erreur chargement états:', error);
+        setError('Impossible de charger les états de sinistres');
+      } finally {
+        setLoadingEtats(false);
+      }
+    };
+
+    loadEtatsSinistre();
+  }, [isAppReady, keycloak?.authenticated]);
 
   const formatEtatForDisplay = (etatLibelle) => {
     if (!etatLibelle || typeof etatLibelle !== 'string') return etatLibelle;
@@ -104,14 +139,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
       "Migré (à réouvrir)": "Migré (à réouvrir)"
     };
 
-    const etatFormate = mappingEtats[etatLibelle];
-    if (etatFormate) {
-      console.log(`🔄 Format état: "${etatLibelle}" → "${etatFormate}"`);
-      return etatFormate;
-    }
-
-    console.log(`⚠️ État non mappé: "${etatLibelle}"`);
-    return etatLibelle;
+    return mappingEtats[etatLibelle] || etatLibelle;
   };
 
   const handleApiError = (error, operation = 'opération') => {
@@ -131,10 +159,13 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     
     if (error.response?.status === 401) {
       setError('Session expirée. Veuillez vous reconnecter.');
+      setTimeout(() => {
+        keycloak?.login();
+      }, 2000);
       return;
     }
     
-    const errorMsg = SinistreService.handleAPIError(error);
+    const errorMsg = SinistreService.handleAPIError ? SinistreService.handleAPIError(error) : error.message;
     setError(errorMsg);
   };
 
@@ -162,7 +193,27 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     return true;
   };
 
+  const checkAuthentication = () => {
+    if (!initialized || !keycloak?.authenticated) {
+      setError('Vous devez être connecté pour effectuer cette action');
+      return false;
+    }
+
+    const token = getToken();
+    if (!token) {
+      setError('Session expirée. Veuillez vous reconnecter.');
+      setTimeout(() => {
+        keycloak?.login();
+      }, 2000);
+      return false;
+    }
+
+    return true;
+  };
+
   const rechercherParNumero = async () => {
+    if (!checkAuthentication()) return;
+    
     if (!validateSearchInput(searchParams.numSinistre, 'le numéro de sinistre')) {
       if (!searchParams.numSinistre.trim()) {
         setError('Le numéro de sinistre est obligatoire');
@@ -205,6 +256,8 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherParNomPrenom = async () => {
+    if (!checkAuthentication()) return;
+    
     const nomValid = validateSearchInput(searchParams.nom, 'le nom');
     const prenomValid = validateSearchInput(searchParams.prenom, 'le prénom');
     
@@ -247,6 +300,8 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherParNatureMaladie = async () => {
+    if (!checkAuthentication()) return;
+    
     if (!validateSearchInput(searchParams.natureMaladie, 'la nature de maladie')) {
       if (!searchParams.natureMaladie.trim()) {
         setError('La nature de maladie est obligatoire');
@@ -285,6 +340,8 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherParEtat = async () => {
+    if (!checkAuthentication()) return;
+    
     const etatTrimmed = searchParams.etatSinistre.trim();
     
     if (!etatTrimmed) {
@@ -335,6 +392,8 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
   };
 
   const rechercherCombine = async () => {
+    if (!checkAuthentication()) return;
+    
     const { numSinistre, nom, prenom, natureMaladie, etatSinistre } = searchParams;
     
     const hasValidCriteria = [
@@ -420,9 +479,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     setError('');
     setSuccessMessage('');
     
-    const currentToken = getAuthToken();
-    if (!currentToken) {
-      setError('Session expirée. Veuillez vous reconnecter.');
+    if (!checkAuthentication()) {
       return;
     }
     
@@ -553,6 +610,46 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
     const endIndex = startIndex + 10;
     return results.slice(startIndex, endIndex);
   };
+
+  if (!initialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">RMA Assurance</h2>
+          <p className="text-gray-600">Initialisation de l'authentification...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!keycloak?.authenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Accès non autorisé</h2>
+          <p className="text-gray-600 mb-4">Vous devez être connecté pour accéder à cette page</p>
+          <button 
+            onClick={() => keycloak.login()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Se connecter
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAppReady) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement de l'application...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderSearchForm = () => {
     switch (activeTab) {
@@ -874,7 +971,7 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
           {userInfo && (
             <div className="user-info">
               <span className="user-welcome">
-                Connecté en tant que <strong>{userInfo.name || userInfo.username}</strong>
+                Connecté en tant que <strong>{userInfo.fullName || userInfo.username}</strong>
               </span>
             </div>
           )}
@@ -1234,6 +1331,20 @@ const ConsultationSinistres = ({ sidebarCollapsed = false }) => {
           </div>
         </div>
       )}
+
+      <div className="debug-info" style={{ 
+        position: 'fixed', 
+        bottom: '10px', 
+        right: '10px', 
+        background: '#f3f4f6', 
+        padding: '10px', 
+        borderRadius: '5px', 
+        fontSize: '12px',
+        maxWidth: '300px',
+        zIndex: 1000
+      }}>
+        
+      </div>
     </div>
   );
 };
